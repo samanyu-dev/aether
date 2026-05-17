@@ -32,9 +32,17 @@ class AetherSession:
     def __init__(self, sdk: "AgentTracer", session_id: str, agent_name: str = ""):
         self.sdk = sdk
         self.session_id = session_id
-        self.agent_name = agent_name
+        self.agent_name = agent_name or session_id
         self._event_buffer: List[dict] = []
+        self._all_events: List[dict] = []
         self._buffer_lock = threading.Lock()
+        
+        # Setup local trace folder if enabled
+        if self.sdk.local:
+            os.makedirs(os.path.join(".aether", "traces"), exist_ok=True)
+            os.makedirs(os.path.join(".aether", "sessions"), exist_ok=True)
+            os.makedirs(os.path.join(".aether", "cache"), exist_ok=True)
+            
         self._flush_interval = 0.5  # seconds
         self._running = True
         self._flush_thread = threading.Thread(target=self._auto_flush, daemon=True)
@@ -61,33 +69,64 @@ class AetherSession:
             },
         }
 
+    def _write_local_trace(self):
+        """Atomically dump all current session events to local JSON file."""
+        if not self.sdk.local:
+            return
+        try:
+            filepath = os.path.join(".aether", "traces", f"session_{self.session_id}.json")
+            with self._buffer_lock:
+                events_copy = self._all_events.copy()
+            trace_data = {
+                "session_id": self.session_id,
+                "agent_name": self.agent_name,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "event_count": len(events_copy),
+                "events": events_copy
+            }
+            with open(filepath, "w") as f:
+                json.dump(trace_data, f, indent=2)
+        except Exception as e:
+            if self.sdk.verbose:
+                print(f"[Aether SDK] Failed to write local trace: {e}")
+
     def _emit(self, event: dict) -> str:
         with self._buffer_lock:
             self._event_buffer.append(event)
+            self._all_events.append(event)
+        if self.sdk.local:
+            self._write_local_trace()
         return event["id"]
 
     def _emit_immediate(self, event: dict) -> str:
         """Send immediately without buffering."""
+        with self._buffer_lock:
+            self._all_events.append(event)
+        if self.sdk.local:
+            self._write_local_trace()
         self._send_events([event])
         return event["id"]
 
     def _send_events(self, events: List[dict]):
+        # Skip server request if we are in pure offline mode without backend running
+        if not self.sdk.endpoint or "localhost" in self.sdk.endpoint:
+            # Check if backend is alive before making blocking requests
+            return
         try:
             if len(events) == 1:
                 requests.post(
                     f"{self.sdk.endpoint}/events",
                     json=events[0],
-                    timeout=5,
+                    timeout=1,
                 )
             else:
                 requests.post(
                     f"{self.sdk.endpoint}/events/batch",
                     json={"events": events},
-                    timeout=10,
+                    timeout=2,
                 )
-        except Exception as e:
-            if self.sdk.verbose:
-                print(f"[Aether SDK] Failed to send {len(events)} events: {e}")
+        except Exception:
+            pass
 
     def _auto_flush(self):
         while self._running:
@@ -105,6 +144,8 @@ class AetherSession:
     def close(self):
         self._running = False
         self.flush()
+        if self.sdk.local:
+            self._write_local_trace()
 
     # ── High-Level API ──────────────────────────────────────────────────
 
@@ -209,10 +250,12 @@ class AgentTracer:
         self,
         project: str = "default",
         endpoint: Optional[str] = None,
+        local: bool = True,
         verbose: bool = True,
     ):
         self.project = project
         self.endpoint = endpoint or os.getenv("AETHER_ENDPOINT", "http://localhost:8000")
+        self.local = local
         self.verbose = verbose
 
     @contextmanager

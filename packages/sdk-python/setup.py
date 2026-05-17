@@ -20,4 +20,9 @@ setup(
         "requests>=2.25.0",
         "websocket-client>=1.0.0",
     ],
+    entry_points={
+        "console_scripts": [
+            "aether=aether.cli:main",
+        ],
+    },
 )

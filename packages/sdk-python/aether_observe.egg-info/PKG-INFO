@@ -1,0 +1,74 @@
+Metadata-Version: 2.1
+Name: aether-observe
+Version: 0.2.0a1
+Summary: Lightweight realtime cognition replay SDK for AI agents.
+Home-page: https://github.com/your-username/Aether
+Author: Aether Authors
+Author-email: maintainers@aether.dev
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+
+# Aether SDK 🐍
+
+### **Lightweight realtime cognition replay SDK for AI agents.**
+
+`aether-observe` is a zero-dependency, ultra-lightweight telemetry logger that helps you trace the reasoning loops of AI agents and stream them into the Aether Observatory.
+
+---
+
+## 🚀 Installation
+
+```bash
+pip install aether-observe
+```
+
+---
+
+## 💡 Quickstart Integration
+
+Trace thoughts, tools, memories, and custom safety events in under 3 lines of code:
+
+```python
+from aether import AgentTracer
+
+# 1. Connect to the Aether Observatory
+tracer = AgentTracer(project="production-pipeline", endpoint="http://localhost:8000")
+
+# 2. Open a session (use "demo-session" for live streaming)
+with tracer.session("code-review-agent", session_id="demo-session") as s:
+    
+    # Creates a deep cyan Root Thought
+    root = s.thought("Formulating codebase patch for async file writes", confidence=0.99)
+    
+    # Creates a glowing amber Tool Call linked to the thought
+    tool = s.tool_call("vector_search", {"query": "async file operations"}, parent_id=root)
+    
+    # Creates a green Result node
+    s.tool_result(tool, {"status": "success"}, latency_ms=180)
+    
+    # Triggers a severe Hallucination flag with rose highlighting
+    s.hallucination("Warning: suggested patch drops stream handle before close", parent_id=tool)
+    
+    # Streams raw tokens directly to the sidebar typewriter
+    s.stream_tokens(["File", " stream", " successfully", " patched!"])
+```
+
+---
+
+## 🛠️ Supported Event Types
+
+| Event | Icon | Purpose |
+| :--- | :--- | :--- |
+| `thought` | 🧠 Brain | Trace a planning, reasoning, or synthesis step. Includes `confidence`. |
+| `tool_call` | 🛠️ Wrench | Log an active execution block or API request. |
+| `tool_result` | ⚡ Lightning | Store output payloads with `latency_ms` tracking. |
+| `memory` | 💾 Database | Track search queries hitting Pinecone, PGVector, or local indexes. |
+| `hallucination` | ⚠️ Triangle | Flag security threats, hallucination warnings, or guardrail halts. |
+| `token` | 💬 Bubble | Stream token chunks for final generation typing effects. |
+
+

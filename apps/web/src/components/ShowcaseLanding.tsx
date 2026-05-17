@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Play, 
@@ -113,6 +113,47 @@ const DEMOS: Record<string, { title: string; description: string; events: Aether
 export const ShowcaseLanding = () => {
   const loadReplay = useAetherStore((s) => s.loadReplay);
   const [activeTab, setActiveTab] = useState<"flow" | "engine" | "lifecycle">("flow");
+  const [localSessions, setLocalSessions] = useState<Array<{
+    filename: string;
+    session_id: string;
+    agent_name: string;
+    event_count: number;
+    timestamp: string;
+  }>>([]);
+
+  useEffect(() => {
+    // Check local server trace list
+    fetch("/api/traces")
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setLocalSessions(data);
+        }
+      })
+      .catch(() => {
+        // Silent catch for Vercel/HF static modes
+      });
+  }, []);
+
+  const runLocalSession = (filename: string) => {
+    fetch(`/api/traces/${filename}`)
+      .then((res) => res.json())
+      .then((data) => {
+        const events = Array.isArray(data) ? data : data.events;
+        if (Array.isArray(events)) {
+          loadReplay(events as AetherEvent[]);
+          setTimeout(() => {
+            useAetherStore.getState().computeGraph();
+          }, 50);
+        }
+      })
+      .catch(() => {
+        alert("Failed to load local session trace file.");
+      });
+  };
 
   const runDemoSession = (key: keyof typeof DEMOS) => {
     const demo = DEMOS[key];
@@ -177,6 +218,47 @@ export const ShowcaseLanding = () => {
           </motion.div>
         ))}
       </div>
+
+      {/* ── DETECTED LOCAL SESSIONS PANEL (Phase 5 Local Discovery) ── */}
+      {localSessions.length > 0 && (
+        <div className="w-full max-w-4xl border border-cyan-500/20 bg-cyan-950/5 rounded-2xl p-6 mb-14 shadow-[0_0_30px_rgba(0,242,255,0.03)] animate-fade-in-up">
+          <h2 className="text-xs font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2 mb-4">
+            <Terminal size={14} className="animate-pulse" />
+            Detected Local Traces
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {localSessions.map((session) => (
+              <div
+                key={session.filename}
+                onClick={() => runLocalSession(session.filename)}
+                className="group flex flex-col justify-between p-4 rounded-xl border border-white/[0.04] bg-white/[0.01] hover:bg-white/[0.02] hover:border-cyan-500/20 transition-all duration-200 cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <span className="text-[9px] font-mono text-cyan-400/80 font-bold block mb-1 uppercase tracking-wider">
+                      {session.agent_name || "Agent Runtime"}
+                    </span>
+                    <h4 className="text-xs font-bold text-white/80 group-hover:text-cyan-400 transition-colors line-clamp-1">
+                      {session.session_id}
+                    </h4>
+                  </div>
+                  <span className="text-[8px] font-mono text-white/20 bg-white/[0.03] px-2 py-0.5 rounded whitespace-nowrap">
+                    {session.event_count} Events
+                  </span>
+                </div>
+                <div className="mt-4 pt-2 border-t border-white/[0.02] flex items-center justify-between">
+                  <span className="text-[8px] font-mono text-white/20">
+                    {new Date(session.timestamp).toLocaleString()}
+                  </span>
+                  <span className="text-[9px] font-semibold text-cyan-400/80 group-hover:text-cyan-400 flex items-center gap-1 transition-colors">
+                    Open Trace <ArrowRight size={8} />
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── ARCHITECTURE VISUALIZATION PANEL (Task 3) ── */}
       <div className="w-full max-w-4xl border border-white/[0.04] bg-white/[0.01] rounded-2xl p-6 mb-14">
