@@ -176,10 +176,10 @@ export const useAetherStore = create<AetherState>((set) => ({
     return {
       events: events,
       activeSession: targetSession,
-      timelinePosition: 1,
+      timelinePosition: 0, // Starts at 0 for cinematic birth progression!
       sessions: Array.from(new Set([...state.sessions, targetSession])),
     };
   }),
 
-  clearActiveEvents: () => set({ events: [], nodes: [], edges: [] }),
+  clearActiveEvents: () => set({ events: [], nodes: [], edges: [], activeSession: null, timelinePosition: 0 }),
 }));

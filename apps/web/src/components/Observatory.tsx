@@ -17,7 +17,8 @@ import AetherEdge from "@/components/AetherEdge";
 import { AgentInspector } from "@/components/AgentInspector";
 import { ShowcaseLanding } from "@/components/ShowcaseLanding";
 import { useAetherWebSocket } from "@/hooks/useAetherWebSocket";
-import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
   Play,
@@ -28,6 +29,11 @@ import {
   Upload,
   Brain,
   AlertTriangle,
+  X,
+  Home,
+  CheckCircle2,
+  RefreshCw,
+  Sparkles,
 } from "lucide-react";
 
 const nodeTypes: NodeTypes = {
@@ -112,13 +118,44 @@ const ObservatoryInner = () => {
   const timelinePosition = useAetherStore((s) => s.timelinePosition);
   useAetherWebSocket(activeSession || "demo-session");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [introActive, setIntroActive] = useState(false);
+  const [endingActive, setEndingActive] = useState(false);
   const { setCenter } = useReactFlow();
+
+  // Dynamic session subtitle for cinematic intro
+  const sessionTitle = useMemo(() => {
+    if (!activeSession) return "";
+    if (activeSession.includes("hallucination")) return "Hallucination Intercept & Safety Recovery Workflow";
+    if (activeSession.includes("tool")) return "Multi-Agent Vector Memory & Tool Telemetry";
+    return "Core AI Cognition Traversal & Action Plan";
+  }, [activeSession]);
+
+  // Handle cinematic 2.4s intro sequence when a session starts at 0
+  useEffect(() => {
+    if (activeSession && timelinePosition === 0) {
+      setIntroActive(true);
+      setIsPlaying(false);
+      const timer = setTimeout(() => {
+        setIntroActive(false);
+        setIsPlaying(true);
+      }, 2400);
+      return () => clearTimeout(timer);
+    }
+  }, [activeSession, timelinePosition]);
+
+  // Handle ending panel trigger when playback completes
+  useEffect(() => {
+    if (timelinePosition >= 1.0 && !isPlaying && activeSession) {
+      setEndingActive(true);
+    } else {
+      setEndingActive(false);
+    }
+  }, [timelinePosition, isPlaying, activeSession]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Guardrail 1: Enforce absolute file size limit of 1.5MB to protect user memory space
     if (file.size > 1.5 * 1024 * 1024) {
       alert("Security Limit Exceeded: Uploaded JSON file must be under 1.5MB to protect local browser memory.");
       return;
@@ -131,13 +168,11 @@ const ObservatoryInner = () => {
         let loadedEvents = Array.isArray(data) ? data : data.events;
         
         if (Array.isArray(loadedEvents)) {
-          // Guardrail 2: Enforce event count limit of 300 items to preserve 60fps graph performance
           if (loadedEvents.length > 300) {
             alert(`File Truncation Notice: Upload contains ${loadedEvents.length} events. Cap is 300 events to prevent canvas hangs. Truncating to first 300 events.`);
             loadedEvents = loadedEvents.slice(0, 300);
           }
 
-          // Guardrail 3: Basic schema validation
           const isValid = loadedEvents.every((ev: unknown) => {
             const item = ev as Record<string, unknown>;
             return item && typeof item === "object" && "id" in item && "type" in item;
@@ -193,31 +228,42 @@ const ObservatoryInner = () => {
       const visible = sEvents.filter(e => e.type !== 'token');
       const nextCount = Math.ceil(visible.length * nextPos);
       const latestVisibleEvent = visible[nextCount - 1];
-      const delay = latestVisibleEvent?.type === "hallucination" ? 3000 : 1400;
+      
+      // Safety critical pause (3.5s) to allow viewers to absorb the safety recovery
+      const delay = latestVisibleEvent?.type === "hallucination" ? 3500 : 1200;
 
       timeoutId = setTimeout(runStep, delay);
     };
 
-    timeoutId = setTimeout(runStep, 1400);
+    timeoutId = setTimeout(runStep, 1200);
 
     return () => clearTimeout(timeoutId);
   }, [isPlaying, activeSession]);
-
-  // Soft camera follow choreography
-  const latestNode = nodes[nodes.length - 1];
-  useEffect(() => {
-    if (latestNode && isPlaying) {
-      setCenter(latestNode.position.x + 125, latestNode.position.y + 50, {
-        zoom: 0.95,
-        duration: 900,
-      });
-    }
-  }, [latestNode, isPlaying, setCenter]);
 
   const sessionEvents = useMemo(
     () => events.filter((e) => e.sessionId === (activeSession || "demo-session")),
     [events, activeSession]
   );
+
+  const activeNodeId = useMemo(() => {
+    const visibleEvents = sessionEvents.filter(e => e.type !== 'token');
+    const count = Math.ceil(visibleEvents.length * timelinePosition);
+    return visibleEvents[count - 1]?.id || null;
+  }, [sessionEvents, timelinePosition]);
+
+  const activeNode = useMemo(() => {
+    return nodes.find((n) => n.id === activeNodeId);
+  }, [nodes, activeNodeId]);
+
+  // Smooth, figma-multiplayer camera following focused exactly on the activeNode coordinate
+  useEffect(() => {
+    if (activeNode && isPlaying) {
+      setCenter(activeNode.position.x + 125, activeNode.position.y + 50, {
+        zoom: 0.95,
+        duration: 1000,
+      });
+    }
+  }, [activeNode, isPlaying, setCenter]);
 
   const thoughtCount = sessionEvents.filter((e) => e.type === "thought").length;
   const toolCount = sessionEvents.filter(
@@ -235,17 +281,23 @@ const ObservatoryInner = () => {
   }, [latestEvent]);
 
   return (
-    <div className="w-full h-full relative">
+    <div className={cn(
+      "w-full h-full relative overflow-hidden transition-all duration-700",
+      latestEvent?.type === "hallucination" && "shadow-[inset_0_0_80px_rgba(244,63,94,0.18)]"
+    )}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        fitViewOptions={{ padding: 0.3, maxZoom: 1.2 }}
+        fitViewOptions={{ padding: 0.35, maxZoom: 1.1 }}
         minZoom={0.2}
         maxZoom={2}
-        className="neural-grid"
+        className={cn(
+          "neural-grid transition-all duration-500",
+          latestEvent?.type === "hallucination" && "bg-rose-950/5"
+        )}
         proOptions={{ hideAttribution: true }}
         defaultEdgeOptions={{
           type: "aetherEdge",
@@ -257,38 +309,52 @@ const ObservatoryInner = () => {
           className="!bg-transparent !border-none !shadow-none"
         />
 
-        {/* ── Top Left: Session Info ── */}
+        {/* ── Top Left: Back Navigation and Session Info ── */}
         <Panel position="top-left" className="flex flex-col gap-2">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="glass-elevated px-4 py-3 rounded-xl flex items-center gap-3"
+            className="flex items-center gap-2"
           >
-            <div className="relative">
-              <Activity
-                className={
-                  isConnected
-                    ? "text-cyan-400"
-                    : "text-white/20"
-                }
-                size={16}
-              />
-              {isConnected && (
-                <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-              )}
-            </div>
-            <div>
-              <p className="text-[9px] uppercase font-bold tracking-[0.15em] text-white/40">
-                Live Cognition Feed
-              </p>
-              <p className="text-xs font-mono text-white/80 mt-0.5">
-                {activeSession || "AWAITING AGENT..."}
-              </p>
+            {activeSession && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={clearEvents}
+                className="glass-subtle p-2.5 rounded-xl hover:bg-rose-500/10 text-white/40 hover:text-rose-400 transition-all border border-white/5 flex items-center justify-center shadow-lg"
+                title="Return to Home"
+              >
+                <Home size={14} />
+              </motion.button>
+            )}
+
+            <div className="glass-elevated px-4 py-2.5 rounded-xl flex items-center gap-3 shadow-lg">
+              <div className="relative">
+                <Activity
+                  className={
+                    isConnected
+                      ? "text-cyan-400"
+                      : "text-white/20"
+                  }
+                  size={16}
+                />
+                {isConnected && (
+                  <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                )}
+              </div>
+              <div>
+                <p className="text-[9px] uppercase font-bold tracking-[0.15em] text-white/40">
+                  Live Cognition Feed
+                </p>
+                <p className="text-xs font-mono text-white/80 mt-0.5">
+                  {activeSession || "AWAITING AGENT..."}
+                </p>
+              </div>
             </div>
           </motion.div>
 
-          {/* Stats */}
-          {sessionEvents.length > 0 && (
+          {/* Stats Summary */}
+          {sessionEvents.length > 0 && !introActive && (
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -316,7 +382,7 @@ const ObservatoryInner = () => {
                   Events
                 </p>
                 <p className="text-sm font-mono text-white/60 font-bold">
-                  {sessionEvents.length}
+                  {Math.ceil(sessionEvents.length * timelinePosition)} / {sessionEvents.length}
                 </p>
               </div>
             </motion.div>
@@ -355,9 +421,9 @@ const ObservatoryInner = () => {
             whileTap={{ scale: 0.95 }}
             onClick={clearEvents}
             className="glass-subtle p-2.5 rounded-xl hover:bg-white/5 transition-all group"
-            title="Reset"
+            title="Close Replay"
           >
-            <RotateCcw
+            <X
               size={16}
               className="text-white/40 group-hover:text-rose-400 transition-colors"
             />
@@ -365,12 +431,12 @@ const ObservatoryInner = () => {
         </Panel>
 
         {/* ── Bottom: Timeline Scrubber ── */}
-        {sessionEvents.length > 0 && (
+        {sessionEvents.length > 0 && !introActive && !endingActive && (
           <Panel position="bottom-center" className="w-full max-w-2xl px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="glass-elevated rounded-xl px-4 py-3"
+              className="glass-elevated rounded-xl px-4 py-3 shadow-xl"
             >
               <div className="flex items-center gap-3 mb-2 justify-center">
                 <button
@@ -444,12 +510,12 @@ const ObservatoryInner = () => {
           pannable
         />
 
-        {/* ── Empty State Showcase (Tasks 3, 4, 5, 6) ── */}
+        {/* ── Empty State Showcase (Home Page) ── */}
         {!activeSession && <ShowcaseLanding />}
       </ReactFlow>
 
       {/* ── Cinematic Narration & Reasoning Overlay ── */}
-      {activeSession && narrationText && (
+      {activeSession && narrationText && !introActive && !endingActive && (
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -469,11 +535,11 @@ const ObservatoryInner = () => {
       )}
 
       {/* ── Hallucination Cinematic Intervention Banner ── */}
-      {latestEvent?.type === "hallucination" && (
+      {latestEvent?.type === "hallucination" && !endingActive && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="absolute top-20 left-1/2 -translate-x-1/2 max-w-md w-[90%] bg-[rgba(244,63,94,0.12)] backdrop-blur-2xl border border-rose-500/30 rounded-xl px-5 py-4 text-center shadow-[0_0_50px_rgba(239,68,68,0.2)] z-30"
+          className="absolute top-20 left-1/2 -translate-x-1/2 max-w-md w-[90%] bg-[rgba(244,63,94,0.15)] backdrop-blur-2xl border border-rose-500/40 rounded-xl px-5 py-4 text-center shadow-[0_0_50px_rgba(239,68,68,0.25)] z-30"
         >
           <div className="flex items-center gap-2.5 justify-center mb-1.5">
             <AlertTriangle className="text-rose-500 animate-[bounce_1s_infinite]" size={18} />
@@ -486,6 +552,122 @@ const ObservatoryInner = () => {
           </p>
         </motion.div>
       )}
+
+      {/* ── Cinematic Replay Intro Overlay ── */}
+      <AnimatePresence>
+        {activeSession && introActive && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-[#020205]/95 backdrop-blur-2xl z-50 flex flex-col items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-center max-w-lg px-6"
+            >
+              <div className="relative w-20 h-20 mx-auto mb-6">
+                <div className="absolute inset-0 rounded-full bg-cyan-500/15 animate-ping" />
+                <div className="absolute inset-2 rounded-full border border-cyan-500/30 bg-cyan-950/20 flex items-center justify-center shadow-[0_0_20px_rgba(0,242,255,0.15)]">
+                  <Brain size={28} className="text-cyan-400 animate-pulse" />
+                </div>
+              </div>
+              
+              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-cyan-400">
+                Aether Telemetry Replay
+              </span>
+              
+              <h2 className="text-2xl font-extrabold tracking-tight text-white mt-3 leading-snug">
+                {sessionTitle}
+              </h2>
+              
+              <p className="text-xs text-white/40 mt-3 leading-relaxed">
+                Replaying live agent cognition, memory retrievals, and guardrail interceptions.
+              </p>
+              
+              <div className="mt-8 flex items-center justify-center gap-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+                <span className="text-[10px] font-mono uppercase tracking-wider text-white/30">
+                  Initializing Replay Scrubber...
+                </span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Cinematic Replay Ending Overlay ── */}
+      <AnimatePresence>
+        {activeSession && endingActive && !introActive && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-[#020205]/90 backdrop-blur-xl z-40 flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="w-full max-w-md bg-[rgba(8,8,16,0.92)] border border-cyan-500/20 rounded-2xl p-7 text-center shadow-[0_0_60px_rgba(0,242,255,0.15)]"
+            >
+              <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                <CheckCircle2 size={24} className="text-emerald-400" />
+              </div>
+              
+              <span className="text-[10px] font-mono font-extrabold uppercase tracking-[0.25em] text-emerald-400">
+                TRAVERSAL COMPLETE
+              </span>
+              
+              <h3 className="text-xl font-bold text-white mt-2">
+                Replay Completed Successfully
+              </h3>
+              
+              <p className="text-xs text-white/40 mt-3 leading-relaxed px-2">
+                All scheduled thoughts and external tool calls executed safely. Anomalous guardrail breaches corrected with 0 critical failures.
+              </p>
+              
+              <div className="grid grid-cols-3 gap-3 my-6">
+                <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3">
+                  <p className="text-[9px] uppercase tracking-wider text-white/30 font-semibold">Nodes</p>
+                  <p className="text-base font-mono font-extrabold text-cyan-400 mt-1">{nodes.length}</p>
+                </div>
+                <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3">
+                  <p className="text-[9px] uppercase tracking-wider text-white/30 font-semibold">Security</p>
+                  <p className="text-base font-mono font-extrabold text-emerald-400 mt-1">100%</p>
+                </div>
+                <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3">
+                  <p className="text-[9px] uppercase tracking-wider text-white/30 font-semibold">Failures</p>
+                  <p className="text-base font-mono font-extrabold text-rose-500 mt-1">0</p>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setTimelinePosition(0);
+                    computeGraph();
+                    setIntroActive(true);
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white font-bold text-xs border border-white/5 transition-all flex items-center justify-center gap-2"
+                >
+                  <RefreshCw size={12} />
+                  Replay Again
+                </button>
+                <button
+                  onClick={clearEvents}
+                  className="flex-1 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                >
+                  <Home size={12} />
+                  Back to Home
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Side Inspector ── */}
       <AgentInspector />

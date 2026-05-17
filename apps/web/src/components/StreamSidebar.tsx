@@ -93,6 +93,20 @@ const EventCard = ({
   const selectedEventId = useAetherStore((s) => s.selectedEventId);
   const isSelected = selectedEventId === event.id;
 
+  const activeNodeId = useAetherStore((s) => {
+    const visibleEvents = s.events.filter(e => e.type !== 'token');
+    const count = Math.ceil(visibleEvents.length * s.timelinePosition);
+    return visibleEvents[count - 1]?.id;
+  });
+  const isActive = event.id === activeNodeId;
+
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (isActive && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [isActive]);
+
   // Skip rendering individual tokens — they're merged in token groups
   if (isToken) return null;
 
@@ -116,6 +130,7 @@ const EventCard = ({
 
   return (
     <motion.div
+      ref={cardRef}
       initial={{ x: 16, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
       transition={{
@@ -126,22 +141,24 @@ const EventCard = ({
       }}
       onClick={() => setSelectedEvent(isSelected ? null : event.id)}
       className={cn(
-        "group relative border-l-2 pl-3 py-2 cursor-pointer transition-all duration-200",
+        "group relative border-l-2 pl-3 py-2 cursor-pointer transition-all duration-300",
         config.border,
-        isSelected
+        isActive
+          ? "bg-cyan-500/10 border-l-[3px] border-l-cyan-400 text-white shadow-[0_0_15px_rgba(0,242,255,0.08)] scale-[1.01]"
+          : isSelected
           ? "bg-white/[0.03] border-l-[3px]"
-          : "hover:bg-white/[0.02]"
+          : "hover:bg-white/[0.02] opacity-75"
       )}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-1.5">
-          <Icon size={11} className={cn(config.color, "opacity-80")} />
+          <Icon size={11} className={cn(config.color, "opacity-90")} />
           <span
             className={cn(
-              "text-[8px] font-bold uppercase tracking-[0.12em]",
+              "text-[8px] font-extrabold uppercase tracking-[0.15em]",
               config.color,
-              "opacity-70"
+              "opacity-80"
             )}
           >
             {event.metadata?.toolName || event.type.replace("_", " ")}
@@ -165,7 +182,10 @@ const EventCard = ({
       </div>
 
       {/* Content */}
-      <p className="text-[11px] text-white/60 leading-[1.5] break-words line-clamp-3">
+      <p className={cn(
+        "text-[11px] leading-[1.5] break-words line-clamp-3",
+        isActive ? "text-white font-medium" : "text-white/60"
+      )}>
         {content}
       </p>
 
@@ -180,7 +200,7 @@ const EventCard = ({
       )}
 
       {/* Selection indicator */}
-      {isSelected && (
+      {(isSelected || isActive) && (
         <motion.div
           layoutId="selected-event"
           className="absolute left-0 top-0 bottom-0 w-0.5 bg-cyan-400"
@@ -227,6 +247,7 @@ export const StreamSidebar = () => {
   const events = useAetherStore((s) => s.events);
   const activeSession = useAetherStore((s) => s.activeSession);
   const isConnected = useAetherStore((s) => s.isConnected);
+  const timelinePosition = useAetherStore((s) => s.timelinePosition);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const sessionEvents = useMemo(
@@ -236,6 +257,11 @@ export const StreamSidebar = () => {
       ),
     [events, activeSession]
   );
+
+  const visibleEvents = useMemo(() => {
+    const count = Math.ceil(sessionEvents.length * timelinePosition);
+    return sessionEvents.slice(0, count);
+  }, [sessionEvents, timelinePosition]);
 
   // Auto-scroll
   useEffect(() => {
@@ -247,16 +273,16 @@ export const StreamSidebar = () => {
         el.scrollTop = el.scrollHeight;
       }
     }
-  }, [sessionEvents]);
+  }, [visibleEvents]);
 
   // Stats
   const stats = useMemo(() => {
     const counts: Record<string, number> = {};
-    sessionEvents.forEach((e) => {
+    visibleEvents.forEach((e) => {
       counts[e.type] = (counts[e.type] || 0) + 1;
     });
     return counts;
-  }, [sessionEvents]);
+  }, [visibleEvents]);
 
   return (
     <div className="flex flex-col h-full">
@@ -276,7 +302,7 @@ export const StreamSidebar = () => {
           </div>
         </div>
         <span className="text-[9px] font-mono text-white/20 bg-white/[0.03] px-2 py-1 rounded">
-          {sessionEvents.length}
+          {visibleEvents.length}
         </span>
       </div>
 
@@ -286,7 +312,7 @@ export const StreamSidebar = () => {
         className="flex-1 overflow-y-auto py-2 space-y-0"
       >
         <AnimatePresence initial={false}>
-          {sessionEvents
+          {visibleEvents
             .filter((e) => e.type !== "token")
             .slice(-60)
             .map((event, idx) => (
@@ -295,10 +321,10 @@ export const StreamSidebar = () => {
         </AnimatePresence>
 
         {/* Token stream at the bottom */}
-        <TokenStream events={sessionEvents} />
+        <TokenStream events={visibleEvents} />
 
         {/* Empty state */}
-        {sessionEvents.length === 0 && (
+        {visibleEvents.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center px-6 py-12">
             <div className="relative w-12 h-12 mb-4">
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-cyan-500/10 to-purple-500/10 animate-pulse" />

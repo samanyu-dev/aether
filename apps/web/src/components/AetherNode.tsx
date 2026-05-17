@@ -143,24 +143,37 @@ const AetherNode = ({ data }: { data: AetherNodeData }) => {
   const isHallucination = data.type === "hallucination";
   const isSelfCorrection = data.metadata?.selfCorrection;
 
-  const activeNodeId = useAetherStore((s) => {
+  // Active path calculation: walk up the parents of the active node!
+  const { activeNodeId, isOnActivePath } = useAetherStore((s) => {
     const visibleEvents = s.events.filter(e => e.type !== 'token');
     const count = Math.ceil(visibleEvents.length * s.timelinePosition);
-    return visibleEvents[count - 1]?.id;
+    const activeId = visibleEvents[count - 1]?.id;
+
+    const path = new Set<string>();
+    let currentId: string | undefined = activeId;
+    while (currentId) {
+      path.add(currentId);
+      const parentEvent = visibleEvents.find(e => e.id === currentId);
+      currentId = parentEvent?.parentId;
+    }
+    return { activeNodeId: activeId, isOnActivePath: path.has(data.id) };
   });
+
   const isActive = data.id === activeNodeId;
 
   return (
     <motion.div
-      initial={{ scale: 0.92, opacity: 0, filter: "blur(6px)" }}
+      initial={{ scale: 0.8, opacity: 0, filter: "blur(8px)" }}
       animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
       transition={{
-        duration: 0.55,
+        duration: 0.65,
+        delay: 0.35, // Delays node card materialization so the edge sweep plays first!
         ease: "easeOut",
       }}
       className={cn(
         "relative group cursor-pointer select-none",
-        "min-w-[220px] max-w-[320px]"
+        "min-w-[220px] max-w-[320px]",
+        !isOnActivePath && "opacity-20 blur-[0.5px] saturate-50 pointer-events-none hover:opacity-40 transition-all duration-500"
       )}
       onClick={() => {
         useAetherStore.getState().setSelectedEvent(data.id);
@@ -170,27 +183,32 @@ const AetherNode = ({ data }: { data: AetherNodeData }) => {
       }}
     >
       {/* Animated Wave Glow backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: [0, 0.8, 0] }}
-        transition={{ 
-          duration: 1.5, 
-          delay: (data.animationIndex || 0) * 0.15, 
-          times: [0, 0.1, 1],
-          ease: "easeOut"
-        }}
-        className={cn(
-          "absolute -inset-2 rounded-2xl blur-xl",
-          isHallucination ? "bg-rose-500/60" : "bg-cyan-500/40"
-        )}
-      />
+      {isOnActivePath && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.8, 0] }}
+          transition={{ 
+            duration: 1.5, 
+            delay: 0.2, 
+            times: [0, 0.1, 1],
+            ease: "easeOut"
+          }}
+          className={cn(
+            "absolute -inset-2 rounded-2xl blur-xl",
+            isHallucination ? "bg-rose-500/60" : "bg-cyan-500/40"
+          )}
+        />
+      )}
+      
       {/* Hover glow */}
-      <div
-        className={cn(
-          "absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl",
-          isHallucination ? "bg-rose-500/30" : "bg-cyan-500/30"
-        )}
-      />
+      {isOnActivePath && (
+        <div
+          className={cn(
+            "absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl",
+            isHallucination ? "bg-rose-500/30" : "bg-cyan-500/30"
+          )}
+        />
+      )}
 
       {/* Main card */}
       <div
@@ -199,18 +217,18 @@ const AetherNode = ({ data }: { data: AetherNodeData }) => {
           "bg-[rgba(8,8,16,0.85)] backdrop-blur-xl",
           config.borderColor,
           config.bgGlow,
-          isHallucination && "animate-pulse-subtle border-rose-500/60",
+          isHallucination && "animate-pulse-subtle border-rose-500/60 shadow-[0_0_40px_rgba(244,63,94,0.25)]",
           !data.parentId && "scale-[1.02] shadow-[0_0_40px_rgba(0,242,255,0.15)] border-cyan-500/50",
           data.type === "tool_call" && "animate-pulse-subtle border-amber-500/60 shadow-[0_0_20px_rgba(245,158,11,0.15)]",
           data.type === "memory" && "border-purple-500/50",
-          !isActive && "opacity-50 saturate-[0.6] hover:opacity-90 hover:saturate-[0.95]"
+          isActive && "border-cyan-400 shadow-[0_0_35px_rgba(0,242,255,0.2)]"
         )}
       >
-        {/* Handle connectors */}
+        {/* Handle target (Left edge) */}
         <Handle
           type="target"
-          position={Position.Top}
-          className="!w-2 !h-2 !bg-white/20 !border-white/10 !-top-1"
+          position={Position.Left}
+          className="!w-2 !h-2 !bg-cyan-400/40 !border-cyan-400/20 !-left-1"
         />
 
         {/* Top accent line */}
@@ -241,9 +259,9 @@ const AetherNode = ({ data }: { data: AetherNodeData }) => {
               <div className="flex items-center gap-2">
                 <span
                   className={cn(
-                    "text-[9px] font-bold uppercase tracking-[0.1em] leading-none",
+                    "text-[9px] font-bold uppercase tracking-[0.15em] leading-none",
                     config.color,
-                    "opacity-80"
+                    "opacity-85"
                   )}
                 >
                   {toolName || config.label}
@@ -341,10 +359,11 @@ const AetherNode = ({ data }: { data: AetherNodeData }) => {
             )}
         </div>
 
+        {/* Handle source (Right edge) */}
         <Handle
           type="source"
-          position={Position.Bottom}
-          className="!w-2 !h-2 !bg-white/20 !border-white/10 !-bottom-1"
+          position={Position.Right}
+          className="!w-2 !h-2 !bg-cyan-400/45 !border-cyan-400/20 !-right-1"
         />
       </div>
     </motion.div>
