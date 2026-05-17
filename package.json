@@ -11,7 +11,8 @@
     "start": "npx concurrently \"npm run dev:web\" \"npm run dev:backend\"",
     "record:low": "node recordings/record_demo.js low",
     "record:medium": "node recordings/record_demo.js medium",
-    "record:high": "node recordings/record_demo.js high"
+    "record:high": "node recordings/record_demo.js high",
+    "deploy:hf": "node scripts/deploy_hf.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
