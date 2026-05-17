@@ -1,0 +1,34 @@
+{
+  "session_id": "quickstart-demo-WeatherAgent-v2-c3b011d7",
+  "agent_name": "OpenAI-Agent",
+  "timestamp": "2026-05-17T17:48:21.661453+00:00",
+  "event_count": 2,
+  "events": [
+    {
+      "id": "23cd8e67-268e-4a1a-847c-208dd02109a9",
+      "sessionId": "quickstart-demo-WeatherAgent-v2-c3b011d7",
+      "timestamp": "2026-05-17T17:48:21.259267+00:00",
+      "type": "thought",
+      "parentId": null,
+      "content": "Received completions request for model: WeatherAgent-v2",
+      "metadata": {
+        "prompt": "[system]: You are a helpful assistant.\n[user]: What is the weather in SF right now?",
+        "confidence": 1.0,
+        "agentName": "OpenAI-Agent",
+        "sessionName": "quickstart-demo-WeatherAgent-v2-c3b011d7"
+      }
+    },
+    {
+      "id": "cae15eb7-92d8-42a0-bc1e-0843501b602b",
+      "sessionId": "quickstart-demo-WeatherAgent-v2-c3b011d7",
+      "timestamp": "2026-05-17T17:48:21.660468+00:00",
+      "type": "system",
+      "parentId": "23cd8e67-268e-4a1a-847c-208dd02109a9",
+      "content": "OpenAI completion request failed: tool_call() got an unexpected keyword argument 'arguments'",
+      "metadata": {
+        "agentName": "OpenAI-Agent",
+        "sessionName": "quickstart-demo-WeatherAgent-v2-c3b011d7"
+      }
+    }
+  ]
+}

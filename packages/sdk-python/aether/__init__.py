@@ -258,6 +258,14 @@ class AgentTracer:
         self.local = local
         self.verbose = verbose
 
+    def start_session(self, name: str, agent_name: str = "", session_id: str = None) -> AetherSession:
+        if not session_id:
+            session_id = f"{self.project}-{name}-{uuid.uuid4().hex[:8]}"
+        sess = AetherSession(self, session_id, agent_name or name)
+        if self.verbose:
+            print(f"[Aether] Non-context session started: {session_id}")
+        return sess
+
     @contextmanager
     def session(self, name: str, agent_name: str = "", session_id: str = None):
         if not session_id:

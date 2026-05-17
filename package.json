@@ -8,10 +8,14 @@
     "dev:backend": "cd backend && python3 main.py",
     "demo:generate": "python3 packages/sdk-python/generate_recordings.py",
     "demo:run": "python3 packages/sdk-python/demo.py",
-    "start": "npx concurrently \"npm run dev:web\" \"npm run dev:backend\""
+    "start": "npx concurrently \"npm run dev:web\" \"npm run dev:backend\"",
+    "record:low": "node recordings/record_demo.js low",
+    "record:medium": "node recordings/record_demo.js medium",
+    "record:high": "node recordings/record_demo.js high"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "playwright": "^1.40.0"
   },
   "workspaces": [
     "apps/*",

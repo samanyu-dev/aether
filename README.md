@@ -1,17 +1,17 @@
-# Aether 🌌 — Realtime AI Cognition Replay & Observability Platform
+# Aether 🌌 — Git + DevTools for AI Cognition
 
-### **Watch AI agents think in realtime. Inspect reasoning trees, replay traces at 60fps, and debug hallucinations.**
+### **Watch AI agents think in realtime. Inspect reasoning trees, replay traces offline, auto-trace OpenAI & LangChain, and debug hallucinations inside VSCode.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/release-v0.2.0--alpha-purple.svg)]()
+[![PyPI Version](https://img.shields.io/pypi/v/aether-observe.svg?color=purple)](https://pypi.org/project/aether-observe/)
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployment-blue.svg)](https://aether-observatory.vercel.app)
 [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/spaces)
 
-Aether is a highly-optimized, lightweight developer platform for tracing multi-agent workflows, diagnosing hallucinations, and replaying cognitive reasoning trees. Built specifically to avoid heavy GPU particle simulations or massive database overhead, Aether delivers structured, portable reasoning storyboards that run smoothly at 60fps on lower-spec hardware (such as a MacBook Air).
+Aether is a highly-optimized, **local-first** developer platform for replaying cognitive reasoning trees, auditing memory recall, and debugging AI hallucinations. Built specifically to feel like **"Git + Chrome DevTools for agent reasoning"**, Aether captures structured trace paths on disk and replays them beautifully on a high-performance offline visualizer running at 60fps.
 
 ---
 
-## 📽️ Interactive Replay Showcase
+## 📽️ Visual Replay Showcase
 
 ### Hallucination Detection & Safe Self-Correction
 Observe how Aether isolates cognitive branching and highlights high-risk safety violations. The active node glows with a strong pulsing rose flare, pausing playback naturally for developer debugging:
@@ -19,7 +19,7 @@ Observe how Aether isolates cognitive branching and highlights high-risk safety 
 ![Hallucination Correction Visual](./docs/assets/hero_hallucination.png)
 
 > [!TIP]
-> **Deterministic Replay Animation:**
+> **Deterministic Replay Timeline:**
 > Aether converts live agent traces into lightweight JSON sessions. Scrub the timeline at the bottom, rewind to the first node, or press play to watch the progressive birth scaling and link trails cascade through the reasoning tree:
 > 
 > ![Replay Scrubbing Animation](./docs/assets/replay_loop.webp)
@@ -28,130 +28,130 @@ Observe how Aether isolates cognitive branching and highlights high-risk safety 
 
 ## 💡 Why Aether?
 
-*   **Deterministic Replay Engine**: No more chaotic, unpredictable graph layouts. Replay sessions step-by-step using timeline scrubbers, offline JSON trace loading, or live WebSocket connection loops.
-*   **Intelligent Visual Hierarchy**: Scaled root nodes highlight base intents with deep cyan halos, tool calls animate with pulsing amber frames, memory lookups draw custom purple accents, and warning modules flag semantic hallucinations.
-*   **Decoupled & Fully Static-Capable**: Perfect for serverless environments. The frontend can run entirely client-side without any backend database or websocket dependency, pulling offline traces instantly.
-*   **Unified Memory Performance**: Capped at a 5,000-event memory buffer on the backend and 200 elements in the frontend, preventing DOM exhaustion and keeping layout calculations completely seamless on lower-spec machines.
-*   **Vercel-Quality Onboarding**: Launches into an interactive showcase portal allowing you to run pre-compiled demos (Simple Reasoning, Multi-Tool Agent, or Hallucination Repair) in a single click with zero setup friction.
+*   🏡 **Local-First & Private:** Traces are saved locally in `.aether/traces/` as portable JSON runs. No cloud database, no third-party APIs, and zero infrastructure cost.
+*   ⏱️ **Offline stand-alone Visualizer:** The PyPI package comes completely pre-bundled with a fully compiled Next.js visualizer. Spin up the server with `aether replay` and play back trace sessions completely offline, instantly.
+*   🧠 **ANSI Colored CLI Explorer:** Search, inspect, and preview thought trees inside your terminal using `aether list`, `aether inspect`, and compute latency/token summaries with `aether summarize`.
+*   🔌 **1-Line Framework Wrapping:** Auto-wrap your `OpenAI` client or pass `AetherCallbackHandler` directly to LangChain to stream reasoning, tool calls, and typewriter tokens at 60fps out-of-the-box.
+*   🧩 **VSCode Extension IDE Integration:** Scan workspace trace folders dynamically, select agent sessions inside a native Sidebar Tree View, and open interactive visualizers right next to your editor.
 
 ---
 
-## 🛠️ Repository Monorepo Structure
+## 🛠️ Monorepo Workspace Structure
 
 ```bash
 apps/
-  └── web/               # Next.js 16 Web Observatory (ReactFlow, Zustand)
+  ├── web/               # Next.js 16 Web Observatory Visualizer (ReactFlow, Zustand)
+  └── vscode/            # Aether VSCode Extension (Activity Bar, Sidebar Explorer, Webview Panel)
 packages/
-  └── sdk-python/        # Lightweight Python Tracer & Trace Generator
-backend/
-  └── main.py            # FastAPI Telemetry Buffer Engine
+  └── sdk-python/        # aether-observe Python SDK (Local flusher, CLI parser, Auto-wrappers)
 recordings/
   └── *.json             # Portable offline session recordings (Sync-ready)
-docs/
-  └── assets/            # High-fidelity project screenshots & media
+examples/
+  └── quickstart_*.py    # Integration tutorial script with mock completions
 ```
 
 ---
 
-## 🚀 Quickstart
+## 📦 PyPI Package & CLI Tooling
 
-Quickly run Aether locally to explore the pre-loaded offline showcase traces, or trigger active websocket connections.
-
-### 1. Clone & Set Up Workspaces
-Ensure you have **Node.js (18+)** and **Python (3.9+)** installed.
-
-```bash
-git clone https://github.com/your-username/Aether.git
-cd Aether
-npm run install:all
-```
-
-### 2. Start the Cognition Services
-Aether includes standard root npm scripts to run services concurrently:
-
-```bash
-# Runs Next.js (port 3000) and FastAPI (port 8000) in a single terminal
-npm start
-```
-
-### 3. Generate Fresh Trace Data
-In a separate terminal, trigger the autonomous trace generator script to compile updated JSON outputs:
-
-```bash
-python3 packages/sdk-python/generate_recordings.py
-```
-*Open `http://localhost:3000` to watch the cognition tree unfold in realtime!*
-
----
-
-## 🐍 Integrating the SDK into Your Agents
-
-Integrate Aether with your LangChain, LlamaIndex, or custom OpenAI agentic loops in under 3 lines of code.
+Install the official Python package natively:
 
 ```bash
 pip install aether-observe
 ```
 
+### 🩺 Diagnostic Health Check (`aether doctor`)
+Verify folder permissions, writable trace repositories, and offline asset setups in one command:
+
+```bash
+aether doctor
+```
+
+### 📊 Summarize Agent Performance (`aether summarize`)
+Compute execution statistics, tool latency, memory recall counts, hallucination rate, and estimated token counts:
+
+```bash
+aether summarize [session_id]
+```
+
+### 🧠 CLI ASCII Thought Trees (`aether inspect`)
+Render structured hierarchical loops, parent-child flows, and type-colored cards directly in your terminal:
+
+```bash
+aether inspect [session_id]
+```
+
+### 🌌 Offline Replay Server (`aether replay`)
+Launch the pre-bundled standalone visualizer local web server and auto-open it in your default web browser:
+
+```bash
+aether replay [--port 3000]
+```
+
+---
+
+## 🔌 1-Line Framework Integrations
+
+### 1. OpenAI Chat Completions Wrapping
+Intercept completions to automatically log prompts, tool requests, token usage, latency, and typewriter outputs:
+
 ```python
 from aether import AgentTracer
+from aether.integrations.openai import trace_openai
+import openai
 
-# 1. Connect to the Aether backend
-tracer = AgentTracer(project="production-agent")
+tracer = AgentTracer(project="openai-agent")
+client = openai.OpenAI()
 
-# 2. Open a session (use "demo-session" for live streaming)
-with tracer.session("code-review", session_id="demo-session") as s:
-    
-    # Creates a deep cyan Root Thought
-    root = s.thought("Formulating codebase patch for async file writes", confidence=0.99)
-    
-    # Creates a glowing amber Tool Call linked to the thought
-    tool = s.tool_call("vector_search", {"query": "async file operations"}, parent_id=root)
-    
-    # Creates a green Result node
-    s.tool_result(tool, {"status": "success"}, latency_ms=180)
-    
-    # Triggers a severe Hallucination flag with rose highlighting
-    s.hallucination("Warning: suggested patch drops stream handle before close", parent_id=tool)
+# Wrap the client in 1 line!
+trace_openai(client, tracer)
+
+# Standard completions will now write local traces automatically!
+response = client.chat.completions.create(
+    model="gpt-4-turbo",
+    messages=[{"role": "user", "content": "What is the capital of France?"}]
+)
+```
+
+### 2. LangChain Native Callbacks Handler
+Pass the native callback handler directly to chains, prompt run templates, or agents to capture nested steps:
+
+```python
+from aether import AgentTracer
+from aether.integrations.langchain import AetherCallbackHandler
+from langchain.chat_models import ChatOpenAI
+
+tracer = AgentTracer(project="langchain-agent")
+handler = AetherCallbackHandler(tracer)
+
+# Pass callback handler to your LangChain runner!
+llm = ChatOpenAI(callbacks=[handler])
 ```
 
 ---
 
-## 🧩 Architectural Design
+## 🧩 VSCode IDE Extension Setup
 
-```mermaid
-graph TD
-    subgraph Agent Runtime
-        A[Autonomous Agent] -->|Trace Event| B[Aether SDK]
-    end
-    subgraph Cognition Core
-        B -->|WebSocket / POST| C[FastAPI Buffer Engine]
-        C -->|State Scrubber| D[Replay Sequencer]
-    end
-    subgraph Web Observatory
-        D -->|React Flow Layout| E[DAG Visualizer]
-        D -->|Typewriter Stream| F[Token Sidebar]
-    end
-    
-    style A fill:#0d0d1a,stroke:#3b82f6,stroke-width:2px
-    style B fill:#0d0d1a,stroke:#eab308,stroke-width:2px
-    style C fill:#0d0d1a,stroke:#06b6d4,stroke-width:2px
-    style D fill:#0d0d1a,stroke:#a855f7,stroke-width:2px
-    style E fill:#0d0d1a,stroke:#10b981,stroke-width:2px
-    style F fill:#0d0d1a,stroke:#64748b,stroke-width:2px
+The Aether VSCode Extension provides side-by-side agent debugging inside the editor:
+
+1. **Workspace Scanning:** Scans `.aether/traces/` inside your active project directory.
+2. **Sidebar Explorer Tree:** Auto-discovers, labels, and displays trace sessions chronologically in the Activity Bar.
+3. **Interactive Panel:** Clicking a trace launches a native editor Webview panel rendering node connections, collapsible typewriter thoughts, and live play-scrubbing.
+
+### How to Compile Locally:
+
+```bash
+cd apps/vscode
+npm install
+npm run compile
 ```
 
----
-
-## 🗺️ Future Roadmap
-
-*   [ ] **VSCode Extension**: Directly inspect reasoning steps side-by-side with your agent development console.
-*   [ ] **Cloud Tracing Adaptors**: One-click integrations for LangSmith, Phoenix, and Arize traces.
-*   [ ] **Differential Tree-Diffs**: Visually compare separate reasoning trials side-by-side to review exact self-correction deltas.
+Open `apps/vscode` in VSCode and press **F5** to start an isolated Extension Development Host to test live!
 
 ---
 
-## 🌎 Deployment Links
+## 🌎 Live Sandbox Showcases
 *   **Vercel Interactive Sandbox**: [aether-observatory.vercel.app](https://aether-observatory.vercel.app)
 *   **Hugging Face Playground**: [huggingface.co/spaces/Aether-AI](https://huggingface.co/spaces)
 
-*Engineered for AI Reasoning Observability.*
+*Engineered for premium AI Reasoning Observability.*

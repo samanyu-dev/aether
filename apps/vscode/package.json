@@ -1,0 +1,70 @@
+{
+  "name": "aether-vscode",
+  "displayName": "Aether Cognition Replay",
+  "description": "Visual cognition replay and observability for AI agents inside VSCode.",
+  "version": "0.1.0",
+  "publisher": "aether",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Visualization",
+    "Linters",
+    "Debuggers"
+  ],
+  "activationEvents": [
+    "onView:aether-traces",
+    "onCommand:aether.refreshExplorer"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "aether-observe",
+          "title": "Aether",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "aether-observe": [
+        {
+          "id": "aether-traces",
+          "name": "Local Cognition Traces"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "aether.refreshExplorer",
+        "title": "Refresh Traces",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "aether.replayTrace",
+        "title": "Open Cognition Replay"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "aether.refreshExplorer",
+          "when": "view == aether-traces",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.7",
+    "@types/vscode": "^1.75.0",
+    "typescript": "^4.9.5"
+  }
+}

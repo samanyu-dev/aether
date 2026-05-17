@@ -1,0 +1,80 @@
+{
+  "session_id": "quickstart-demo-WeatherAgent-v2-82286115",
+  "agent_name": "OpenAI-Agent",
+  "timestamp": "2026-05-17T17:48:47.724643+00:00",
+  "event_count": 5,
+  "events": [
+    {
+      "id": "72031dc1-03c9-4c54-8d0e-19ed2c49a8b4",
+      "sessionId": "quickstart-demo-WeatherAgent-v2-82286115",
+      "timestamp": "2026-05-17T17:48:47.303031+00:00",
+      "type": "thought",
+      "parentId": null,
+      "content": "Received completions request for model: WeatherAgent-v2",
+      "metadata": {
+        "prompt": "[system]: You are a helpful assistant.\n[user]: What is the weather in SF right now?",
+        "confidence": 1.0,
+        "agentName": "OpenAI-Agent",
+        "sessionName": "quickstart-demo-WeatherAgent-v2-82286115"
+      }
+    },
+    {
+      "id": "cf3b1d7a-52ec-4c11-9135-17f4d300f565",
+      "sessionId": "quickstart-demo-WeatherAgent-v2-82286115",
+      "timestamp": "2026-05-17T17:48:47.708672+00:00",
+      "type": "tool_call",
+      "parentId": "72031dc1-03c9-4c54-8d0e-19ed2c49a8b4",
+      "content": "Calling get_current_weather",
+      "metadata": {
+        "toolName": "get_current_weather",
+        "args": "{\"location\": \"San Francisco, CA\"}",
+        "agentName": "OpenAI-Agent",
+        "sessionName": "quickstart-demo-WeatherAgent-v2-82286115"
+      }
+    },
+    {
+      "id": "00a2835a-f63d-4b72-abce-3e68f66f155a",
+      "sessionId": "quickstart-demo-WeatherAgent-v2-82286115",
+      "timestamp": "2026-05-17T17:48:47.709756+00:00",
+      "type": "tool_result",
+      "parentId": "cf3b1d7a-52ec-4c11-9135-17f4d300f565",
+      "content": "{\"status\": \"called_by_openai\", \"id\": \"call_99af\"}",
+      "metadata": {
+        "success": true,
+        "latency": 10,
+        "agentName": "OpenAI-Agent",
+        "sessionName": "quickstart-demo-WeatherAgent-v2-82286115"
+      }
+    },
+    {
+      "id": "ffaebf3f-7563-4050-87ed-59a5fa71469c",
+      "sessionId": "quickstart-demo-WeatherAgent-v2-82286115",
+      "timestamp": "2026-05-17T17:48:47.710891+00:00",
+      "type": "thought",
+      "parentId": "72031dc1-03c9-4c54-8d0e-19ed2c49a8b4",
+      "content": "OpenAI Response choice:\nI am calling the get_current_weather tool to retrieve live conditions.",
+      "metadata": {
+        "tokens_used": {
+          "prompt_tokens": 120,
+          "completion_tokens": 45,
+          "total_tokens": 165
+        },
+        "confidence": 0.99,
+        "agentName": "OpenAI-Agent",
+        "sessionName": "quickstart-demo-WeatherAgent-v2-82286115"
+      }
+    },
+    {
+      "id": "1aafa424-edd6-496e-9307-cb62058df635",
+      "sessionId": "quickstart-demo-WeatherAgent-v2-82286115",
+      "timestamp": "2026-05-17T17:48:47.711497+00:00",
+      "type": "token",
+      "parentId": "72031dc1-03c9-4c54-8d0e-19ed2c49a8b4",
+      "content": "I am calling the get_current_weather tool to retrieve live conditions.",
+      "metadata": {
+        "agentName": "OpenAI-Agent",
+        "sessionName": "quickstart-demo-WeatherAgent-v2-82286115"
+      }
+    }
+  ]
+}

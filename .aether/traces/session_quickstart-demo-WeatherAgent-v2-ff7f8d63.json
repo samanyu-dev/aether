@@ -1,0 +1,48 @@
+{
+  "session_id": "quickstart-demo-WeatherAgent-v2-ff7f8d63",
+  "agent_name": "OpenAI-Agent",
+  "timestamp": "2026-05-17T17:48:35.108905+00:00",
+  "event_count": 3,
+  "events": [
+    {
+      "id": "7c81e552-1636-45bc-9164-9432a09f6583",
+      "sessionId": "quickstart-demo-WeatherAgent-v2-ff7f8d63",
+      "timestamp": "2026-05-17T17:48:34.702019+00:00",
+      "type": "thought",
+      "parentId": null,
+      "content": "Received completions request for model: WeatherAgent-v2",
+      "metadata": {
+        "prompt": "[system]: You are a helpful assistant.\n[user]: What is the weather in SF right now?",
+        "confidence": 1.0,
+        "agentName": "OpenAI-Agent",
+        "sessionName": "quickstart-demo-WeatherAgent-v2-ff7f8d63"
+      }
+    },
+    {
+      "id": "9714dfd0-3a16-404c-9c80-8c22cf10e642",
+      "sessionId": "quickstart-demo-WeatherAgent-v2-ff7f8d63",
+      "timestamp": "2026-05-17T17:48:35.107562+00:00",
+      "type": "tool_call",
+      "parentId": "7c81e552-1636-45bc-9164-9432a09f6583",
+      "content": "Calling get_current_weather",
+      "metadata": {
+        "toolName": "get_current_weather",
+        "args": "{\"location\": \"San Francisco, CA\"}",
+        "agentName": "OpenAI-Agent",
+        "sessionName": "quickstart-demo-WeatherAgent-v2-ff7f8d63"
+      }
+    },
+    {
+      "id": "be29032d-4fb9-449d-ad74-d70ba5c3c9db",
+      "sessionId": "quickstart-demo-WeatherAgent-v2-ff7f8d63",
+      "timestamp": "2026-05-17T17:48:35.108259+00:00",
+      "type": "system",
+      "parentId": "7c81e552-1636-45bc-9164-9432a09f6583",
+      "content": "OpenAI completion request failed: tool_result() got an unexpected keyword argument 'call_id'",
+      "metadata": {
+        "agentName": "OpenAI-Agent",
+        "sessionName": "quickstart-demo-WeatherAgent-v2-ff7f8d63"
+      }
+    }
+  ]
+}

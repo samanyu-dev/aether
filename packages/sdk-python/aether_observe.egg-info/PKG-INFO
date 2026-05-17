@@ -1,17 +1,14 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: aether-observe
 Version: 0.2.0a1
 Summary: Lightweight realtime cognition replay SDK for AI agents.
-Home-page: https://github.com/your-username/Aether
-Author: Aether Authors
-Author-email: maintainers@aether.dev
-License: UNKNOWN
-Platform: UNKNOWN
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
+Requires-Dist: requests>=2.25.0
+Requires-Dist: websocket-client>=1.0.0
 
 # Aether SDK 🐍
 
@@ -70,5 +67,3 @@ with tracer.session("code-review-agent", session_id="demo-session") as s:
 | `memory` | 💾 Database | Track search queries hitting Pinecone, PGVector, or local indexes. |
 | `hallucination` | ⚠️ Triangle | Flag security threats, hallucination warnings, or guardrail halts. |
 | `token` | 💬 Bubble | Stream token chunks for final generation typing effects. |
-
-
