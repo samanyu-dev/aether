@@ -1,0 +1,62 @@
+{
+  "events": [
+    {
+      "id": "6b5d7d5b-0517-4aea-b4e1-866a2be331d7",
+      "sessionId": "tool-agent-demo",
+      "timestamp": "2026-05-17T16:03:12.403156+00:00",
+      "type": "thought",
+      "parentId": null,
+      "content": "Objective: Find recent papers on LoRA fine-tuning.",
+      "metadata": {
+        "confidence": 0.98,
+        "agentName": "ResearchGPT"
+      }
+    },
+    {
+      "id": "4421d2ca-c319-474c-921d-db8cd07e6d78",
+      "sessionId": "tool-agent-demo",
+      "timestamp": "2026-05-17T16:03:12.403162+00:00",
+      "type": "memory",
+      "parentId": "6b5d7d5b-0517-4aea-b4e1-866a2be331d7",
+      "content": "Recalling user preference: prefers CVPR and NeurIPS venues.",
+      "metadata": {
+        "source": "pinecone-vector-db"
+      }
+    },
+    {
+      "id": "7b419822-3ff3-45e7-9633-6ea1304e4032",
+      "sessionId": "tool-agent-demo",
+      "timestamp": "2026-05-17T16:03:12.403167+00:00",
+      "type": "tool_call",
+      "parentId": "6b5d7d5b-0517-4aea-b4e1-866a2be331d7",
+      "content": "Querying arXiv search index...",
+      "metadata": {
+        "toolName": "arxiv_search",
+        "query": "LoRA OR Low-Rank Adaptation"
+      }
+    },
+    {
+      "id": "bbfa6195-c4f3-4249-8ee1-3e8bae62b24f",
+      "sessionId": "tool-agent-demo",
+      "timestamp": "2026-05-17T16:03:12.403171+00:00",
+      "type": "tool_result",
+      "parentId": "7b419822-3ff3-45e7-9633-6ea1304e4032",
+      "content": "Found 14 relevant papers. Top match: 'QLoRA: Efficient Finetuning'",
+      "metadata": {
+        "latency": 342,
+        "results_count": 14
+      }
+    },
+    {
+      "id": "8d029db3-afe4-44cb-bb68-e5692f2d171d",
+      "sessionId": "tool-agent-demo",
+      "timestamp": "2026-05-17T16:03:12.403176+00:00",
+      "type": "thought",
+      "parentId": "bbfa6195-c4f3-4249-8ee1-3e8bae62b24f",
+      "content": "Synthesizing research summary and generating markdown report.",
+      "metadata": {
+        "confidence": 0.96
+      }
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "events": [
+    {
+      "id": "038c7fa2-d512-4310-ba4f-be3018f2456f",
+      "sessionId": "simple-reasoning-demo",
+      "timestamp": "2026-05-17T16:03:12.402839+00:00",
+      "type": "thought",
+      "parentId": null,
+      "content": "Analyzing user request: 'Explain quantum computing simply'",
+      "metadata": {
+        "confidence": 0.99,
+        "agentName": "TutorGPT"
+      }
+    },
+    {
+      "id": "487acd1b-e150-4ee8-a200-1278966e9f94",
+      "sessionId": "simple-reasoning-demo",
+      "timestamp": "2026-05-17T16:03:12.402958+00:00",
+      "type": "thought",
+      "parentId": "038c7fa2-d512-4310-ba4f-be3018f2456f",
+      "content": "Breaking down core concepts: Superposition and Entanglement.",
+      "metadata": {
+        "confidence": 0.95
+      }
+    },
+    {
+      "id": "8caf72bf-c2d2-42fc-bd9c-cb9ead430fc3",
+      "sessionId": "simple-reasoning-demo",
+      "timestamp": "2026-05-17T16:03:12.402964+00:00",
+      "type": "thought",
+      "parentId": "487acd1b-e150-4ee8-a200-1278966e9f94",
+      "content": "Formulating physical analogy: A spinning coin instead of heads or tails.",
+      "metadata": {
+        "confidence": 0.92
+      }
+    },
+    {
+      "id": "2515dd7e-c7fe-4eb8-b9d7-cd6351ac8bf8",
+      "sessionId": "simple-reasoning-demo",
+      "timestamp": "2026-05-17T16:03:12.402969+00:00",
+      "type": "system",
+      "parentId": "038c7fa2-d512-4310-ba4f-be3018f2456f",
+      "content": "Response generation complete.",
+      "metadata": {}
+    }
+  ]
+}

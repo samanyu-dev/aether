@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aether-observe"
+version = "0.2.0a1"
+description = "Lightweight realtime cognition replay SDK for AI agents."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = [
+    "requests>=2.25.0",
+    "websocket-client>=1.0.0"
+]

@@ -1,34 +1,20 @@
 {
-  "name": "frontend",
+  "name": "aether-workspace",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
-  },
-  "dependencies": {
-    "@types/dagre": "^0.7.54",
-    "clsx": "^2.1.1",
-    "dagre": "^0.8.5",
-    "framer-motion": "^12.38.0",
-    "lucide-react": "^1.14.0",
-    "next": "16.2.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "reactflow": "^11.11.4",
-    "tailwind-merge": "^3.6.0",
-    "zustand": "^5.0.13"
+    "install:all": "npm install --prefix apps/web && pip3 install -r backend/requirements.txt",
+    "dev:web": "npm run dev --prefix apps/web -- -p 3000",
+    "dev:backend": "cd backend && python3 main.py",
+    "demo:generate": "python3 packages/sdk-python/generate_recordings.py",
+    "demo:run": "python3 packages/sdk-python/demo.py",
+    "start": "npx concurrently \"npm run dev:web\" \"npm run dev:backend\""
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.2.6",
-    "tailwindcss": "^4",
-    "typescript": "^5"
-  }
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }
