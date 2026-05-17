@@ -118,21 +118,44 @@ const ObservatoryInner = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Guardrail 1: Enforce absolute file size limit of 1.5MB to protect user memory space
+    if (file.size > 1.5 * 1024 * 1024) {
+      alert("Security Limit Exceeded: Uploaded JSON file must be under 1.5MB to protect local browser memory.");
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target?.result as string);
-        const loadedEvents = Array.isArray(data) ? data : data.events;
+        let loadedEvents = Array.isArray(data) ? data : data.events;
+        
         if (Array.isArray(loadedEvents)) {
+          // Guardrail 2: Enforce event count limit of 300 items to preserve 60fps graph performance
+          if (loadedEvents.length > 300) {
+            alert(`File Truncation Notice: Upload contains ${loadedEvents.length} events. Cap is 300 events to prevent canvas hangs. Truncating to first 300 events.`);
+            loadedEvents = loadedEvents.slice(0, 300);
+          }
+
+          // Guardrail 3: Basic schema validation
+          const isValid = loadedEvents.every((ev: unknown) => {
+            const item = ev as Record<string, unknown>;
+            return item && typeof item === "object" && "id" in item && "type" in item;
+          });
+          if (!isValid) {
+            alert("Corrupt Schema: Loaded events do not match AetherEvent formatting (missing required 'id' or 'type' properties).");
+            return;
+          }
+
           loadReplay(loadedEvents);
           setTimeout(() => {
             useAetherStore.getState().computeGraph();
           }, 50);
         } else {
-          alert("Invalid replay format. Could not find events array.");
+          alert("Invalid replay format: Could not find structured events array.");
         }
       } catch {
-        alert("Failed to parse JSON replay file.");
+        alert("Parse Error: Failed to process JSON replay file.");
       }
     };
     reader.readAsText(file);
