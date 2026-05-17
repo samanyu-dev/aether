@@ -245,11 +245,7 @@ const ObservatoryInner = () => {
     [events, activeSession]
   );
 
-  const activeNodeId = useMemo(() => {
-    const visibleEvents = sessionEvents.filter(e => e.type !== 'token');
-    const count = Math.ceil(visibleEvents.length * timelinePosition);
-    return visibleEvents[count - 1]?.id || null;
-  }, [sessionEvents, timelinePosition]);
+  const activeNodeId = useAetherStore((s) => s.activeNodeId);
 
   const activeNode = useMemo(() => {
     return nodes.find((n) => n.id === activeNodeId);

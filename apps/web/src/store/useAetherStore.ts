@@ -22,6 +22,8 @@ interface AetherState {
   nodes: Node[];
   edges: Edge[];
   timelinePosition: number; // 0 to 1
+  activeNodeId: string | null;
+  activePathNodeIds: string[];
   
   // Actions
   addEvent: (event: AetherEvent) => void;
@@ -46,6 +48,8 @@ export const useAetherStore = create<AetherState>((set) => ({
   nodes: [],
   edges: [],
   timelinePosition: 1,
+  activeNodeId: null,
+  activePathNodeIds: [],
 
   setSelectedEvent: (id) => set({ selectedEventId: id }),
 
@@ -116,6 +120,20 @@ export const useAetherStore = create<AetherState>((set) => ({
       visibleEvents = visibleEvents.slice(-50);
     }
 
+    // Compute active ID
+    const activeId = visibleEvents[visibleEvents.length - 1]?.id || null;
+    
+    // Compute active parent path (cycle-safe)
+    const pathNodeIds: string[] = [];
+    let currentId: string | undefined = activeId || undefined;
+    const visited = new Set<string>();
+    while (currentId && !visited.has(currentId)) {
+      visited.add(currentId);
+      pathNodeIds.push(currentId);
+      const parentEvent = visibleEvents.find(e => e.id === currentId);
+      currentId = parentEvent?.parentId;
+    }
+
     // Create Nodes
     const newNodes: Node[] = visibleEvents.map((event, index) => {
       const node = {
@@ -132,7 +150,7 @@ export const useAetherStore = create<AetherState>((set) => ({
     const newEdges: Edge[] = [];
     visibleEvents.forEach((event) => {
       if (event.parentId) {
-        const isTargetActive = event.id === visibleEvents[visibleEvents.length - 1]?.id;
+        const isTargetActive = event.id === activeId;
         const isHallucination = event.type === "hallucination";
         
         newEdges.push({
@@ -166,7 +184,12 @@ export const useAetherStore = create<AetherState>((set) => ({
       };
     });
 
-    return { nodes: layoutedNodes, edges: newEdges };
+    return { 
+      nodes: layoutedNodes, 
+      edges: newEdges,
+      activeNodeId: activeId,
+      activePathNodeIds: pathNodeIds
+    };
   }),
   
   loadReplay: (events) => set((state) => {
@@ -181,5 +204,13 @@ export const useAetherStore = create<AetherState>((set) => ({
     };
   }),
 
-  clearActiveEvents: () => set({ events: [], nodes: [], edges: [], activeSession: null, timelinePosition: 0 }),
+  clearActiveEvents: () => set({ 
+    events: [], 
+    nodes: [], 
+    edges: [], 
+    activeSession: null, 
+    timelinePosition: 0,
+    activeNodeId: null,
+    activePathNodeIds: []
+  }),
 }));

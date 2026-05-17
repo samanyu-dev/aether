@@ -24,22 +24,7 @@ export const AetherEdge = ({
     targetPosition,
   });
 
-  const activePathNodes = useAetherStore((s) => {
-    const visibleEvents = s.events.filter(e => e.type !== 'token');
-    const count = Math.ceil(visibleEvents.length * s.timelinePosition);
-    const activeId = visibleEvents[count - 1]?.id;
-
-    const path = new Set<string>();
-    let currentId: string | undefined = activeId;
-    while (currentId) {
-      path.add(currentId);
-      const parentEvent = visibleEvents.find(e => e.id === currentId);
-      currentId = parentEvent?.parentId;
-    }
-    return path;
-  });
-
-  const isEdgeOnActivePath = activePathNodes.has(target);
+  const isEdgeOnActivePath = useAetherStore((s) => s.activePathNodeIds.includes(target));
 
   const isActive = data?.isActive;
   const isHallucination = data?.isHallucination;

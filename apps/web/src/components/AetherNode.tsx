@@ -143,21 +143,9 @@ const AetherNode = ({ data }: { data: AetherNodeData }) => {
   const isHallucination = data.type === "hallucination";
   const isSelfCorrection = data.metadata?.selfCorrection;
 
-  // Active path calculation: walk up the parents of the active node!
-  const { activeNodeId, isOnActivePath } = useAetherStore((s) => {
-    const visibleEvents = s.events.filter(e => e.type !== 'token');
-    const count = Math.ceil(visibleEvents.length * s.timelinePosition);
-    const activeId = visibleEvents[count - 1]?.id;
-
-    const path = new Set<string>();
-    let currentId: string | undefined = activeId;
-    while (currentId) {
-      path.add(currentId);
-      const parentEvent = visibleEvents.find(e => e.id === currentId);
-      currentId = parentEvent?.parentId;
-    }
-    return { activeNodeId: activeId, isOnActivePath: path.has(data.id) };
-  });
+  // Active path calculation: fetched directly from pre-computed store state!
+  const activeNodeId = useAetherStore((s) => s.activeNodeId);
+  const isOnActivePath = useAetherStore((s) => s.activePathNodeIds.includes(data.id));
 
   const isActive = data.id === activeNodeId;
 

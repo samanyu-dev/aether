@@ -93,11 +93,7 @@ const EventCard = ({
   const selectedEventId = useAetherStore((s) => s.selectedEventId);
   const isSelected = selectedEventId === event.id;
 
-  const activeNodeId = useAetherStore((s) => {
-    const visibleEvents = s.events.filter(e => e.type !== 'token');
-    const count = Math.ceil(visibleEvents.length * s.timelinePosition);
-    return visibleEvents[count - 1]?.id;
-  });
+  const activeNodeId = useAetherStore((s) => s.activeNodeId);
   const isActive = event.id === activeNodeId;
 
   const cardRef = useRef<HTMLDivElement>(null);
