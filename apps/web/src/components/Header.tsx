@@ -31,7 +31,14 @@ export const Header = () => {
         <div className="flex items-center gap-6">
           <button className="text-[10px] font-bold tracking-widest text-white/40 hover:text-primary transition-colors uppercase">Observatory</button>
           <button className="text-[10px] font-bold tracking-widest text-white/40 hover:text-white transition-colors uppercase">History</button>
-          <button className="text-[10px] font-bold tracking-widest text-white/40 hover:text-white transition-colors uppercase">SDK</button>
+          <a 
+            href="https://github.com/Samanyu-dev/Aether_Web" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-[10px] font-bold tracking-widest text-white/40 hover:text-primary transition-colors uppercase"
+          >
+            Main Website
+          </a>
         </div>
         
         <div className="h-4 w-px bg-white/10" />
