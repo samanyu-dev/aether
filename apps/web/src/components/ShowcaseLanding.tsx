@@ -9,7 +9,13 @@ import {
   Terminal, 
   GitBranch, 
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Shield,
+  HardDrive,
+  Lock,
+  CloudOff,
+  Server,
+  Activity
 } from "lucide-react";
 import { useAetherStore, AetherEvent } from "@/store/useAetherStore";
 
@@ -783,7 +789,120 @@ const DEMOS: Record<string, { title: string; description: string; events: Aether
   }
 ]
   }
-};;;
+};
+
+const OnboardingConsole = () => {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStep((prev) => (prev + 1) % 4);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="bg-black/60 rounded-lg p-4 font-mono text-[10px] text-cyan-400/90 border border-white/5 shadow-inner leading-relaxed mb-4 relative min-h-[175px]">
+      {/* Dynamic step states */}
+      <AnimatePresence mode="wait">
+        {step === 0 && (
+          <motion.div
+            key="step-0"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="space-y-1"
+          >
+            <div className="text-white/20 select-none"># 1. Install tracing runner</div>
+            <div className="text-cyan-400 font-bold flex items-center gap-1">
+              <span className="text-white/40 select-none">$</span> pip install aether-observe
+              <motion.span
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ repeat: Infinity, duration: 0.8 }}
+                className="inline-block w-1.5 h-3 bg-cyan-400"
+              />
+            </div>
+            <div className="text-emerald-500/80 pt-2 text-[9px] animate-pulse">✓ Installed successfully</div>
+          </motion.div>
+        )}
+
+        {step === 1 && (
+          <motion.div
+            key="step-1"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="space-y-1"
+          >
+            <div className="text-white/20 select-none"># 2. Instrument in 1 line</div>
+            <div className="text-white/90 font-semibold"><span className="text-cyan-400">from</span> aether <span className="text-cyan-400">import</span> AgentTracer</div>
+            <div className="text-white/90">tracer = AgentTracer(project=<span className="text-amber-300">"assistant"</span>)</div>
+            <div className="text-white/90"><span className="text-cyan-400">with</span> tracer.session(<span className="text-amber-300">"chat-agent"</span>):</div>
+            <div className="text-white/50">  thought = tracer.thought(<span className="text-amber-300">"Analyzing request..."</span>)</div>
+            <div className="text-white/50">  tracer.tool_call(<span className="text-amber-300">"web_search"</span>)</div>
+          </motion.div>
+        )}
+
+        {step === 2 && (
+          <motion.div
+            key="step-2"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="space-y-1"
+          >
+            <div className="text-white/20 select-none"># 3. Launch fully offline viewer</div>
+            <div className="text-cyan-400 font-bold flex items-center gap-1">
+              <span className="text-white/40 select-none">$</span> aether replay
+              <motion.span
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ repeat: Infinity, duration: 0.8 }}
+                className="inline-block w-1.5 h-3 bg-cyan-400"
+              />
+            </div>
+            <div className="text-cyan-400/50 pt-2 text-[9px] animate-pulse">Launching Aether local web server on port 3000...</div>
+          </motion.div>
+        )}
+
+        {step === 3 && (
+          <motion.div
+            key="step-3"
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            className="space-y-2 text-center py-4"
+          >
+            <Sparkles className="mx-auto text-amber-400 animate-spin" size={18} />
+            <div className="text-[11px] font-bold text-white/90 uppercase tracking-widest">Replay Reconstructed!</div>
+            <div className="space-y-1 text-[9px] text-cyan-400/80 font-semibold max-w-xs mx-auto">
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="flex justify-between items-center bg-cyan-950/20 px-2 py-0.5 rounded border border-cyan-500/10">
+                <span>⚡ TRACE GENERATED</span> <span className="text-emerald-400">✓</span>
+              </motion.div>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="flex justify-between items-center bg-cyan-950/20 px-2 py-0.5 rounded border border-cyan-500/10">
+                <span>🧬 REPLAY SEQUENCED</span> <span className="text-emerald-400">✓</span>
+              </motion.div>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="flex justify-between items-center bg-cyan-950/20 px-2 py-0.5 rounded border border-cyan-500/10">
+                <span>🌌 COGNITION EMERGES</span> <span className="text-emerald-400">✓</span>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      {/* Interactive Step Indicator Dots */}
+      <div className="absolute bottom-2 right-3 flex gap-1 select-none">
+        {[0, 1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className={`w-1 h-1 rounded-full transition-all duration-300 ${
+              step === i ? "bg-cyan-400 w-2.5" : "bg-white/10"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export const ShowcaseLanding = () => {
   const loadReplay = useAetherStore((s) => s.loadReplay);
@@ -839,64 +958,209 @@ export const ShowcaseLanding = () => {
   };
 
   return (
-    <div className="absolute inset-0 overflow-y-auto px-8 py-10 flex flex-col items-center justify-start bg-[#020205]/60 z-10 custom-scrollbar select-none">
+    <div className="absolute inset-0 overflow-y-auto px-8 py-12 flex flex-col items-center justify-start bg-[#010103]/90 z-10 custom-scrollbar select-none">
+      <style>{`
+        @keyframes marquee-vertical {
+          0% { transform: translateY(-100%); }
+          100% { transform: translateY(200%); }
+        }
+        .animate-marquee-vertical {
+          animation: marquee-vertical 2s linear infinite;
+        }
+      `}</style>
       
       {/* ── HERO BANNER ── */}
       <motion.div 
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center max-w-3xl mb-12"
+        className="text-center max-w-2xl mb-12"
       >
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/30 bg-cyan-950/20 text-cyan-400 text-[10px] font-mono font-semibold tracking-wider uppercase mb-4 shadow-[0_0_15px_rgba(0,242,255,0.1)]">
-          <Sparkles size={10} className="animate-pulse" />
-          Cinematic AI Trace Observatory
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-500/20 bg-cyan-950/10 text-cyan-400 text-[9px] font-mono tracking-wider uppercase mb-3 shadow-[0_0_15px_rgba(0,242,255,0.05)]">
+          <Sparkles size={9} className="animate-pulse" />
+          Aether Trace Observatory
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white/90 bg-clip-text">
-          Visualize AI Reasoning <span className="text-cyan-400">In Realtime</span>
+        <h1 className="text-2xl font-extrabold tracking-tight text-white/95 leading-tight">
+          Replay and debug <span className="text-cyan-400">AI cognition visually.</span>
         </h1>
-        <p className="text-sm text-white/40 mt-3 leading-relaxed max-w-xl mx-auto">
-          A highly-optimized, lightweight developer tool for tracing multi-agent workflows, diagnosing hallucinations, and replaying token streams at 60fps.
+        <p className="text-[11px] text-white/40 mt-2 max-w-md mx-auto leading-relaxed">
+          Private, local-first devtools for replaying AI reasoning, auditing vector memories, and safely isolating cognitive hallucinations in real-time.
         </p>
       </motion.div>
 
-      {/* ── THE THREE ONE-CLICK DEMOS (Task 6 Wow Moment) ── */}
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-5 mb-14">
-        {Object.entries(DEMOS).map(([key, demo]) => (
-          <motion.div
-            key={key}
-            whileHover={{ y: -4, scale: 1.01 }}
-            className="group relative rounded-xl border border-white/[0.04] bg-white/[0.01] p-5 hover:bg-white/[0.02] hover:border-cyan-500/20 transition-all duration-300 cursor-pointer flex flex-col justify-between"
-            onClick={() => runDemoSession(key)}
-          >
-            <div className="absolute top-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Play size={14} className="text-cyan-400" />
+      {/* ── SPLIT ROW CONTAINER ── */}
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 items-stretch">
+        
+        {/* ── LEFT COLUMN: GETTING STARTED & LOCAL-FIRST ── */}
+        <div className="flex flex-col gap-6">
+          
+          {/* Onboarding Python SDK block */}
+          <div className="border border-white/[0.04] bg-white/[0.01] rounded-xl p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-3">
+              <span className="text-[8px] font-mono font-bold tracking-widest text-cyan-500/80 bg-cyan-500/5 px-2 py-0.5 border border-cyan-500/10 rounded">
+                PYTHON SDK
+              </span>
             </div>
+            
+            <h3 className="text-xs font-bold text-white/80 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Terminal size={12} className="text-cyan-400" />
+              ⚡ Onboarding in 10 Seconds
+            </h3>
+            
+            {/* Ultra-Premium Interactive Code Panel */}
+            <OnboardingConsole />
+
+            {/* Checklist items */}
+            <div className="grid grid-cols-2 gap-2 text-[9px] font-mono text-white/40 border-t border-white/[0.03] pt-3">
+              <div className="flex items-center gap-1.5 text-cyan-400/80">
+                <span className="text-[10px] font-bold">✓</span> Trace Auto-Generated
+              </div>
+              <div className="flex items-center gap-1.5 text-cyan-400/80">
+                <span className="text-[10px] font-bold">✓</span> Replay Opens Locally
+              </div>
+              <div className="flex items-center gap-1.5 text-cyan-400/80">
+                <span className="text-[10px] font-bold">✓</span> Cognition Graph Reconstructs
+              </div>
+              <div className="flex items-center gap-1.5 text-cyan-400/80">
+                <span className="text-[10px] font-bold">✓</span> Timeline Interactive
+              </div>
+            </div>
+          </div>
+
+          {/* Runs Fully Local block */}
+          <div className="border border-white/[0.04] bg-white/[0.01] rounded-xl p-5 flex flex-col justify-between shadow-sm">
+            <h3 className="text-xs font-bold text-white/80 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Lock size={12} className="text-emerald-400" />
+              🏡 Private & Runs Fully Local
+            </h3>
+            
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              {[
+                { title: "No Cloud Dependency", desc: "Runs 100% on localhost", icon: CloudOff },
+                { title: "No Telemetry", desc: "Your data stays inside your files", icon: Shield },
+                { title: "Zero Infrastructure Cost", desc: "Replay traces stored as JSON", icon: HardDrive },
+                { title: "Privacy-Safe Debugging", desc: "Offline visualizer verification", icon: Server }
+              ].map((item) => (
+                <div key={item.title} className="flex gap-2 items-start">
+                  <div className="p-1 rounded bg-white/[0.02] border border-white/[0.04] shrink-0 text-white/40">
+                    <item.icon size={11} />
+                  </div>
+                  <div>
+                    <h4 className="text-[10px] font-bold text-white/70">{item.title}</h4>
+                    <p className="text-[8px] text-white/30 leading-snug">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+        </div>
+
+        {/* ── RIGHT COLUMN: DEMO REPLAYS & RECONSTRUCTION PIPELINE ── */}
+        <div className="flex flex-col gap-6 justify-between">
+          
+          {/* Main Hallucination & Self-Correction CTA (WOW MOMENT) */}
+          <div 
+            onClick={() => runDemoSession("hallucination")}
+            className="group relative rounded-xl border border-rose-500/20 bg-rose-950/5 p-6 hover:bg-rose-950/10 hover:border-rose-500/35 transition-all duration-300 cursor-pointer flex flex-col justify-between shadow-[0_0_30px_rgba(244,63,94,0.03)]"
+          >
+            <div className="absolute top-4 right-4 text-rose-400 group-hover:scale-110 transition-transform">
+              <Play size={18} fill="currentColor" className="opacity-80" />
+            </div>
+            
             <div>
-              <h3 className="text-sm font-bold text-white/80 group-hover:text-cyan-400 transition-colors flex items-center gap-2">
-                {key === "simple" && <Brain size={14} className="text-cyan-400" />}
-                {key === "tool" && <Cpu size={14} className="text-amber-400" />}
-                {key === "hallucination" && <AlertTriangle size={14} className="text-rose-400" />}
-                {demo.title}
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 text-[8px] font-mono uppercase tracking-widest font-bold mb-3 border border-rose-500/15">
+                <AlertTriangle size={8} className="animate-pulse" />
+                Primary Hallucination Demo
+              </div>
+              <h3 className="text-sm font-bold text-white/90 group-hover:text-rose-400 transition-colors">
+                Launch Interactive Replay
               </h3>
-              <p className="text-xs text-white/30 mt-2 leading-relaxed">
-                {demo.description}
+              <p className="text-[10px] text-white/40 mt-1 leading-relaxed">
+                Observe how Aether intercepts a DevOps wildcard shell execution attempt, slowing down pacing with a red rupture sweep before stabilizing via safe sibling path correction.
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-white/[0.04] flex items-center justify-between">
-              <span className="text-[9px] font-mono text-white/20 uppercase tracking-wider">
-                {demo.events.length} Nodes
+            
+            <div className="mt-5 pt-3 border-t border-white/[0.04] flex items-center justify-between">
+              <span className="text-[9px] font-mono text-white/20 uppercase">
+                31 Events • Sandbox Audited
               </span>
-              <span className="text-[10px] font-medium text-cyan-400/80 group-hover:text-cyan-400 flex items-center gap-1 transition-colors">
-                Launch Replay <ArrowRight size={10} />
+              <span className="text-[10px] font-bold text-rose-400/90 group-hover:text-rose-400 flex items-center gap-1 transition-colors">
+                Start Traversal →
               </span>
             </div>
-          </motion.div>
-        ))}
+          </div>
+
+          {/* Quick links to alternate demos */}
+          <div className="grid grid-cols-2 gap-4">
+            {Object.entries(DEMOS).filter(([k]) => k !== "hallucination").map(([key, demo]) => (
+              <div
+                key={key}
+                onClick={() => runDemoSession(key as keyof typeof DEMOS)}
+                className="group p-3 rounded-lg border border-white/[0.03] bg-white/[0.01] hover:bg-white/[0.02] hover:border-cyan-500/20 transition-all cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <h4 className="text-[10px] font-bold text-white/80 group-hover:text-cyan-400 transition-colors flex items-center gap-1.5">
+                    {key === "simple" ? <Brain size={11} className="text-cyan-400" /> : <Cpu size={11} className="text-amber-400" />}
+                    {demo.title}
+                  </h4>
+                  <p className="text-[8px] text-white/30 mt-1 line-clamp-2 leading-snug">
+                    {demo.description}
+                  </p>
+                </div>
+                <div className="text-[8px] text-cyan-400/80 group-hover:text-cyan-400 font-semibold text-right mt-2 flex items-center justify-end gap-0.5">
+                  Launch <ArrowRight size={8} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Reasoning Reconstruction Pipeline (Part 2) */}
+          <div className="border border-white/[0.04] bg-white/[0.01] rounded-xl p-5 shadow-sm">
+            <h3 className="text-xs font-bold text-white/80 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Activity size={12} className="text-cyan-400" />
+              🧠 Reasoning Reconstruction Pipeline
+            </h3>
+            
+            {/* Horizontal pipeline flow */}
+            <div className="grid grid-cols-6 gap-1 relative py-2 px-1">
+              {[
+                { name: "Agent", desc: "Telemetry capture" },
+                { name: "SDK", desc: "1-line intercept" },
+                { name: "Stream", desc: "Disk JSON buffering" },
+                { name: "Sequencer", desc: "Timeline playback" },
+                { name: "Graph", desc: "Dagre DAG layout" },
+                { name: "Observer", desc: "60fps playback" }
+              ].map((stage, idx, arr) => (
+                <div key={stage.name} className="flex flex-col items-center text-center relative group">
+                  <div className="w-5 h-5 rounded-full bg-cyan-950/20 border border-cyan-500/30 flex items-center justify-center text-[9px] font-mono font-bold text-cyan-400 relative z-10 shadow-[0_0_8px_rgba(0,242,255,0.05)]">
+                    {idx + 1}
+                  </div>
+                  <h4 className="text-[8px] font-bold text-white/80 mt-1.5 truncate w-full">{stage.name}</h4>
+                  
+                  {idx < arr.length - 1 && (
+                    <div className="absolute top-2.5 left-[60%] right-[-40%] h-0.5 bg-gradient-to-r from-cyan-500/20 to-cyan-500/40 pointer-events-none overflow-hidden z-0">
+                      <div className="absolute top-0 bottom-0 w-2.5 bg-cyan-400/80 rounded-full animate-marquee-vertical" style={{ animationName: 'marquee-horizontal', animationDuration: '1.5s' }} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            <style>{`
+              @keyframes marquee-horizontal {
+                0% { left: -10%; }
+                100% { left: 110%; }
+              }
+            `}</style>
+          </div>
+
+        </div>
+
       </div>
 
-      {/* ── DETECTED LOCAL SESSIONS PANEL (Phase 5 Local Discovery) ── */}
+      {/* ── DETECTED LOCAL SESSIONS PANEL ── */}
       {localSessions.length > 0 && (
-        <div className="w-full max-w-4xl border border-cyan-500/20 bg-cyan-950/5 rounded-2xl p-6 mb-14 shadow-[0_0_30px_rgba(0,242,255,0.03)] animate-fade-in-up">
+        <div className="w-full max-w-4xl border border-cyan-500/20 bg-cyan-950/5 rounded-2xl p-6 mb-8 shadow-[0_0_30px_rgba(0,242,255,0.03)] animate-fade-in-up">
           <h2 className="text-xs font-bold text-cyan-400 uppercase tracking-widest flex items-center gap-2 mb-4">
             <Terminal size={14} className="animate-pulse" />
             Detected Local Traces
@@ -934,147 +1198,6 @@ export const ShowcaseLanding = () => {
           </div>
         </div>
       )}
-
-      {/* ── ARCHITECTURE VISUALIZATION PANEL (Task 3) ── */}
-      <div className="w-full max-w-4xl border border-white/[0.04] bg-white/[0.01] rounded-2xl p-6 mb-14">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-white/[0.04] pb-4 mb-6 gap-4">
-          <div>
-            <h2 className="text-sm font-bold text-white/80 uppercase tracking-widest flex items-center gap-2">
-              <GitBranch size={14} className="text-cyan-400" />
-              Observatory Architecture
-            </h2>
-            <p className="text-[11px] text-white/30 mt-0.5">
-              Lightweight, low-latency telemetry flow engineered for unified memory.
-            </p>
-          </div>
-          <div className="flex gap-1.5 bg-white/[0.02] p-1 rounded-lg border border-white/[0.04]">
-            {[
-              { id: "flow", label: "Event Flow" },
-              { id: "engine", label: "Replay Engine" },
-              { id: "lifecycle", label: "Node Lifecycle" }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as "flow" | "engine" | "lifecycle")}
-                className={`px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all ${
-                  activeTab === tab.id 
-                    ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20" 
-                    : "text-white/30 hover:text-white/60"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="h-44 w-full flex items-center justify-center relative overflow-hidden bg-black/25 rounded-xl border border-white/[0.02]">
-          <AnimatePresence mode="wait">
-            {activeTab === "flow" && (
-              <motion.div 
-                key="flow"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="w-full h-full flex items-center justify-around px-8 font-mono text-[10px]"
-              >
-                {[
-                  { label: "AI Agent", color: "text-white/60" },
-                  { label: "Python SDK", color: "text-yellow-400/80" },
-                  { label: "WS Connection", color: "text-cyan-400" },
-                  { label: "Replay Engine", color: "text-purple-400" },
-                  { label: "DAG Renderer", color: "text-emerald-400" }
-                ].map((node, i, arr) => (
-                  <React.Fragment key={node.label}>
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-current animate-pulse text-cyan-400" />
-                      <span className={`${node.color} font-bold`}>{node.label}</span>
-                    </div>
-                    {i < arr.length - 1 && (
-                      <div className="h-0.5 w-16 bg-gradient-to-r from-cyan-500/10 to-cyan-500/40 relative overflow-hidden">
-                        <div className="absolute top-0 bottom-0 w-2 bg-cyan-400 animate-[marquee_2s_linear_infinite]" />
-                      </div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </motion.div>
-            )}
-
-            {activeTab === "engine" && (
-              <motion.div 
-                key="engine"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="w-full h-full flex items-center justify-around px-8 font-mono text-[10px]"
-              >
-                {[
-                  { label: "Telemetry Ingestion", desc: "WebSocket events buffer" },
-                  { label: "Linear Sequencer", desc: "Timeline scrubber" },
-                  { label: "State Dispatched", desc: "Central store sync" },
-                  { label: "Dagre Layout", desc: "Perfect DAG scaling" }
-                ].map((step, i, arr) => (
-                  <React.Fragment key={step.label}>
-                    <div className="flex flex-col items-center text-center p-3 rounded-lg border border-white/[0.02] bg-white/[0.01]">
-                      <span className="text-white/80 font-bold">{step.label}</span>
-                      <span className="text-[8px] text-white/30 mt-1">{step.desc}</span>
-                    </div>
-                    {i < arr.length - 1 && (
-                      <div className="text-white/20 font-bold">→</div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </motion.div>
-            )}
-
-            {activeTab === "lifecycle" && (
-              <motion.div 
-                key="lifecycle"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="w-full h-full flex items-center justify-around px-8 font-mono text-[10px]"
-              >
-                {[
-                  { type: "THOUGHT", label: "Superposition", color: "text-cyan-400 border-cyan-500/20 bg-cyan-500/5" },
-                  { type: "TOOL_CALL", label: "arxiv_search", color: "text-amber-400 border-amber-500/20 bg-amber-500/5" },
-                  { type: "HALLUCINATION", label: "rm -rf risk", color: "text-rose-400 border-rose-500/20 bg-rose-500/5" },
-                  { type: "SELF_CORRECTION", label: "find safe command", color: "text-purple-400 border-purple-500/20 bg-purple-500/5" }
-                ].map((node, i, arr) => (
-                  <React.Fragment key={node.type}>
-                    <div className={`border rounded-lg px-3 py-2 flex flex-col items-center gap-1 ${node.color}`}>
-                      <span className="text-[8px] font-bold tracking-widest">{node.type}</span>
-                      <span className="text-white/70">{node.label}</span>
-                    </div>
-                    {i < arr.length - 1 && (
-                      <div className="text-white/20 font-bold">→</div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* ── SETUP & DEVELOPER QUICKSTART GUIDE (Task 6) ── */}
-      <div className="w-full max-w-4xl border border-white/[0.04] bg-[#030307]/80 rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6 justify-between">
-        <div className="max-w-md">
-          <h3 className="text-sm font-bold text-white/80 uppercase tracking-widest flex items-center gap-2">
-            <Terminal size={14} className="text-cyan-400" />
-            Integrate With Your Agents
-          </h3>
-          <p className="text-xs text-white/30 mt-2 leading-relaxed">
-            Aether includes a clean Python SDK that supports async operations, tool tracing, and custom guardrails. Run the tracer in your local projects in under 3 lines of code.
-          </p>
-        </div>
-        <div className="w-full md:w-auto shrink-0 bg-black/60 border border-white/5 rounded-xl px-4 py-3 font-mono text-xs text-cyan-400 flex items-center justify-between gap-4 shadow-inner">
-          <code>pip install aether-observe</code>
-          <span className="text-[9px] uppercase tracking-wider text-white/20 font-bold border border-white/10 rounded px-1.5 py-0.5">
-            PyPI
-          </span>
-        </div>
-      </div>
 
     </div>
   );

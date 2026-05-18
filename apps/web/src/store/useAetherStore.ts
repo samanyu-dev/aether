@@ -109,7 +109,7 @@ export const useAetherStore = create<AetherState>((set) => ({
 
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
-    dagreGraph.setGraph({ rankdir: 'LR', nodesep: 42, ranksep: 58 });
+    dagreGraph.setGraph({ rankdir: 'LR', nodesep: 80, ranksep: 120 });
 
     // Filter events by timeline and remove tokens (tokens are for sidebar only)
     const count = Math.ceil(state.events.length * state.timelinePosition);
@@ -171,15 +171,58 @@ export const useAetherStore = create<AetherState>((set) => ({
     // Compute Layout
     dagre.layout(dagreGraph);
 
+    // Pre-parse a dictionary of visible events for fast lookup
+    const eventMap = new Map(visibleEvents.map(e => [e.id, e]));
+
     const layoutedNodes = newNodes.map((node) => {
       const nodeWithPosition = dagreGraph.node(node.id);
+      let posX = nodeWithPosition.x;
+      let posY = nodeWithPosition.y;
+
+      const event = eventMap.get(node.id);
+      if (event) {
+        // 1. Root Thought Positioning: Anchor higher and more central
+        if (!event.parentId) {
+          posY -= 50; // Shift root node slightly higher to act as the head origin
+        }
+
+        // 2. Memory nodes orbital placement close to parent thought with clearance
+        if (event.type === "memory" && event.parentId) {
+          const parentNode = dagreGraph.node(event.parentId);
+          if (parentNode) {
+            // Orbiting auxiliary memory higher above the parent thought card to prevent overlap
+            posX = parentNode.x + 35;
+            posY = parentNode.y - 130; 
+          }
+        }
+
+        // 3. Organic staggering for tool chains and thoughts
+        // Creates vertical offsets and staggered branch elegance
+        const staggerIndex = event.parentId ? visibleEvents.findIndex(e => e.id === event.id) : 0;
+        if (event.type !== "memory" && event.parentId) {
+          posY += Math.sin(staggerIndex * 2.5) * 15;
+        }
+
+        // 4. Hallucination Branching visually diverges off-path
+        if (event.type === "hallucination") {
+          posY += 140; // Push visually far off-path (plenty of clearance)
+          posX += 55; // Give extra forward push
+        }
+
+        // 5. Self Correction branches curve back inward, restoring logical alignment
+        if (event.metadata?.selfCorrection) {
+          posY -= 80; // Pull back toward center main line
+          posX += 30;
+        }
+      }
+
       return {
         ...node,
         targetPosition: Position.Left,
         sourcePosition: Position.Right,
         position: {
-          x: nodeWithPosition.x - 125,
-          y: nodeWithPosition.y - 50,
+          x: posX - 125,
+          y: posY - 50,
         },
       };
     });

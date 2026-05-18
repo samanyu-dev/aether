@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { EdgeProps, getSmoothStepPath } from "reactflow";
+import { EdgeProps, getBezierPath } from "reactflow";
 import { useAetherStore } from "@/store/useAetherStore";
 
 export const AetherEdge = ({
@@ -15,7 +15,7 @@ export const AetherEdge = ({
   data,
   target,
 }: EdgeProps) => {
-  const [edgePath] = getSmoothStepPath({
+  const [edgePath] = getBezierPath({
     sourceX,
     sourceY,
     sourcePosition,
@@ -32,19 +32,19 @@ export const AetherEdge = ({
   const isDestabilized = data?.isDestabilized;
   const isCorrection = targetEvent?.metadata?.selfCorrection;
 
-  let strokeColor = "rgba(255, 255, 255, 0.03)";
-  let strokeWidth = 1.0;
+  let strokeColor = "rgba(255, 255, 255, 0.08)";
+  let strokeWidth = 0.8;
 
   if (isEdgeOnActivePath) {
     if (isHallucination || isDestabilized) {
       strokeColor = "rgba(239, 68, 68, 0.85)"; // Red-500
-      strokeWidth = 2.5;
+      strokeWidth = 3.2;
     } else if (isCorrection) {
       strokeColor = "rgba(16, 185, 129, 0.9)"; // Emerald-500 stabilization
-      strokeWidth = 2.2;
+      strokeWidth = 2.8;
     } else {
       strokeColor = "rgba(0, 242, 255, 0.85)"; // Cyan-400
-      strokeWidth = 2.0;
+      strokeWidth = 2.4;
     }
   }
 
@@ -77,9 +77,10 @@ export const AetherEdge = ({
         d={edgePath}
         stroke={strokeColor}
         strokeWidth={strokeWidth}
+        strokeDasharray={isHallucination ? "4 4" : undefined}
         fill="none"
         style={style}
-        opacity={isEdgeOnActivePath ? 1.0 : 0.05}
+        opacity={isEdgeOnActivePath ? 1.0 : 0.12}
       />
 
       {/* Edge Sweeper Pulse effect */}
@@ -94,10 +95,10 @@ export const AetherEdge = ({
               ? "#10b981" 
               : "#00f2ff"
           }
-          strokeWidth={strokeWidth + 0.5}
-          strokeDasharray="12 40"
+          strokeWidth={strokeWidth + 0.6}
+          strokeDasharray="14 36"
           strokeDashoffset="100"
-          className="animate-[edgeSweep_2.5s_linear_infinite]"
+          className="animate-[edgeSweep_1.8s_linear_infinite]"
           style={{
             animationDirection: "normal",
           }}

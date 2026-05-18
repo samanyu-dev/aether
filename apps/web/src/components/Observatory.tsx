@@ -47,7 +47,7 @@ const edgeTypes: EdgeTypes = {
 const getNarrationForEvent = (event: AetherEvent): string => {
   const meta = event.metadata || {};
   const agent = String(meta.agentName || "Agent");
-  
+
   switch (event.type) {
     case "thought":
       if (!event.parentId) {
@@ -57,27 +57,27 @@ const getNarrationForEvent = (event: AetherEvent): string => {
         return `🧠 Safety correction activated! Redirecting logic to safe alternative command.`;
       }
       return `💡 Refining logical step: "${event.content}"`;
-      
+
     case "tool_call":
       const tool = String(meta.toolName || "external tool");
       const cmd = meta.command ? `: "${meta.command}"` : "";
       return `🔧 [${agent}] calling ${tool} to gather external evidence${cmd}.`;
-      
+
     case "tool_result":
       const latency = meta.latency ? ` in ${meta.latency}ms` : "";
       return `⚡ Received tool outcome${latency}: "${event.content}"`;
-      
+
     case "memory":
       const source = meta.source ? ` [${meta.source}]` : "";
       return `💾 Accessing vector DB memory store${source} to fetch context: "${event.content}"`;
-      
+
     case "hallucination":
       const detector = meta.detector || "guardrails";
       return `⚠️ DANGER: [${detector}] intercepted an anomalous wild-card command attempt! Pre-emptively blocking action.`;
-      
+
     case "system":
       return `⚙️ System signal: "${event.content}"`;
-      
+
     default:
       return event.content;
   }
@@ -118,6 +118,7 @@ const ObservatoryInner = () => {
   const timelinePosition = useAetherStore((s) => s.timelinePosition);
   useAetherWebSocket(activeSession || "demo-session");
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [introActive, setIntroActive] = useState(false);
   const [endingActive, setEndingActive] = useState(false);
   const { setCenter } = useReactFlow();
@@ -166,7 +167,7 @@ const ObservatoryInner = () => {
       try {
         const data = JSON.parse(event.target?.result as string);
         let loadedEvents = Array.isArray(data) ? data : data.events;
-        
+
         if (Array.isArray(loadedEvents)) {
           if (loadedEvents.length > 300) {
             alert(`File Truncation Notice: Upload contains ${loadedEvents.length} events. Cap is 300 events to prevent canvas hangs. Truncating to first 300 events.`);
@@ -201,7 +202,7 @@ const ObservatoryInner = () => {
     computeGraph();
   }, [events.length, activeSession, computeGraph]);
 
-  // Replay Animation Loop with Variable Pacing & pauses
+  // Replay Animation Loop with Storytelling pacing based on node types
   useEffect(() => {
     if (!isPlaying) return;
 
@@ -215,7 +216,7 @@ const ObservatoryInner = () => {
 
       const currentStep = Math.ceil(eventsCount * state.timelinePosition);
       const nextPos = Math.min(1, (currentStep + 1) / eventsCount);
-      
+
       state.setTimelinePosition(nextPos);
       state.computeGraph();
 
@@ -224,26 +225,41 @@ const ObservatoryInner = () => {
         return;
       }
 
-      // Check for hallucination to dramatically slow down pacing
+      // Rebuilt Storytelling pacing calculations
       const visible = sEvents.filter(e => e.type !== 'token');
       const nextCount = Math.ceil(visible.length * nextPos);
       const latestVisibleEvent = visible[nextCount - 1];
-      
-      // Safety critical pause (3.5s) to allow viewers to absorb the safety recovery
-      const delay = latestVisibleEvent?.type === "hallucination" ? 3500 : 1200;
 
+      let baseDelay = 1200; // Medium default pace
+      if (latestVisibleEvent) {
+        if (latestVisibleEvent.type === "hallucination") {
+          baseDelay = 3800; // Slow, warning pause to let anomaly absorb
+        } else if (latestVisibleEvent.metadata?.selfCorrection) {
+          baseDelay = 2800; // Deliberate recovery cadence
+        } else if (latestVisibleEvent.type === "tool_call" || latestVisibleEvent.type === "tool_result") {
+          baseDelay = 750;  // Tool execution pipelines run slightly faster
+        } else if (latestVisibleEvent.type === "memory") {
+          baseDelay = 1600; // Memory retrieval has a gentle pause
+        }
+      }
+
+      const delay = baseDelay / playbackSpeed;
       timeoutId = setTimeout(runStep, delay);
     };
 
-    timeoutId = setTimeout(runStep, 1200);
+    timeoutId = setTimeout(runStep, 1200 / playbackSpeed);
 
     return () => clearTimeout(timeoutId);
-  }, [isPlaying, activeSession]);
+  }, [isPlaying, activeSession, playbackSpeed]);
 
   const sessionEvents = useMemo(
     () => events.filter((e) => e.sessionId === (activeSession || "demo-session")),
     [events, activeSession]
   );
+
+  const visibleTicks = useMemo(() => {
+    return sessionEvents.filter(e => e.type !== 'token');
+  }, [sessionEvents]);
 
   const activeNodeId = useAetherStore((s) => s.activeNodeId);
 
@@ -251,26 +267,40 @@ const ObservatoryInner = () => {
     return nodes.find((n) => n.id === activeNodeId);
   }, [nodes, activeNodeId]);
 
-  // Smooth, figma-multiplayer camera following focused exactly on the activeNode coordinate
-  useEffect(() => {
-    if (activeNode && isPlaying) {
-      setCenter(activeNode.position.x + 125, activeNode.position.y + 50, {
-        zoom: 0.95,
-        duration: 1000,
-      });
-    }
-  }, [activeNode, isPlaying, setCenter]);
-
-  const thoughtCount = sessionEvents.filter((e) => e.type === "thought").length;
-  const toolCount = sessionEvents.filter(
-    (e) => e.type === "tool_call"
-  ).length;
-
   const latestEvent = useMemo(() => {
     const visible = sessionEvents.filter(e => e.type !== 'token');
     const count = Math.ceil(visible.length * timelinePosition);
     return visible[count - 1] || null;
   }, [sessionEvents, timelinePosition]);
+
+  // Rebuilt Cinematic Soft Camera Follow focusing on active node and preserving contextual flow
+  useEffect(() => {
+    if (activeNode && isPlaying) {
+      const isHallucination = latestEvent?.type === "hallucination";
+      const isCorrection = latestEvent?.metadata?.selfCorrection;
+
+      let targetZoom = 0.82; // Soft zoom to preserve parent thought & child branch relationships
+      let followDuration = 1100;
+
+      if (isHallucination) {
+        targetZoom = 0.98; // Tighter warning focus to center on the anomaly
+        followDuration = 1400; // Slower, dramatic pan
+      } else if (isCorrection) {
+        targetZoom = 0.86; // Stabilizing wider perspective
+        followDuration = 1000;
+      }
+
+      setCenter(activeNode.position.x + 125, activeNode.position.y + 50, {
+        zoom: targetZoom,
+        duration: followDuration,
+      });
+    }
+  }, [activeNode, isPlaying, latestEvent, setCenter]);
+
+  const thoughtCount = sessionEvents.filter((e) => e.type === "thought").length;
+  const toolCount = sessionEvents.filter(
+    (e) => e.type === "tool_call"
+  ).length;
 
   const narrationText = useMemo(() => {
     return latestEvent ? getNarrationForEvent(latestEvent) : null;
@@ -394,7 +424,7 @@ const ObservatoryInner = () => {
             onChange={handleFileUpload}
             className="hidden"
           />
-          
+
           <motion.button
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -432,7 +462,7 @@ const ObservatoryInner = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="glass-elevated rounded-xl px-4 py-3 shadow-xl"
+              className="glass-elevated rounded-xl px-4 py-3 shadow-xl border border-white/[0.04]"
             >
               <div className="flex items-center gap-3 mb-2 justify-center">
                 <button
@@ -464,30 +494,81 @@ const ObservatoryInner = () => {
                 >
                   <SkipForward size={14} />
                 </button>
+
+                {/* Speed Multiplier Controls */}
+                <div className="flex items-center gap-1 ml-4 border-l border-white/10 pl-4">
+                  {[0.5, 1.0, 2.0].map((spd) => (
+                    <button
+                      key={spd}
+                      onClick={() => setPlaybackSpeed(spd)}
+                      className={cn(
+                        "px-2 py-0.5 rounded text-[9px] font-mono font-bold transition-all border",
+                        playbackSpeed === spd
+                          ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30 shadow-[0_0_10px_rgba(0,242,255,0.15)]"
+                          : "text-white/30 border-transparent hover:text-white/60 hover:bg-white/[0.02]"
+                      )}
+                    >
+                      {spd}x
+                    </button>
+                  ))}
+                </div>
               </div>
+
               <div className="flex items-center gap-3">
-                <span className="text-[9px] font-mono text-white/30 uppercase w-16">
+                <span className="text-[9px] font-mono text-cyan-400/80 uppercase w-16 text-left font-bold tracking-wider">
                   {Math.round(timelinePosition * 100)}%
                 </span>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={Math.round(timelinePosition * 100)}
-                  onChange={(e) => {
-                    const pos = parseInt(e.target.value) / 100;
-                    setTimelinePosition(pos);
-                    computeGraph();
-                  }}
-                  className="flex-1 h-1 appearance-none bg-white/10 rounded-full cursor-pointer
-                    [&::-webkit-slider-thumb]:appearance-none
-                    [&::-webkit-slider-thumb]:w-3
-                    [&::-webkit-slider-thumb]:h-3
-                    [&::-webkit-slider-thumb]:rounded-full
-                    [&::-webkit-slider-thumb]:bg-cyan-400
-                    [&::-webkit-slider-thumb]:shadow-[0_0_10px_rgba(0,242,255,0.5)]
-                    [&::-webkit-slider-thumb]:cursor-pointer"
-                />
+
+                {/* Custom Video Editor Scrubber Container */}
+                <div className="flex-1 relative py-2 flex items-center">
+                  {/* Event Ticks Layer */}
+                  <div className="absolute left-1 right-1 h-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
+                    {visibleTicks.map((tick, idx) => {
+                      const pct = visibleTicks.length > 1 ? (idx / (visibleTicks.length - 1)) * 100 : 0;
+                      let tickColor = "bg-white/10";
+                      if (tick.type === "thought") tickColor = "bg-cyan-500/60 shadow-[0_0_4px_#00f2ff]";
+                      if (tick.type === "tool_call" || tick.type === "tool_result") tickColor = "bg-amber-500/60 shadow-[0_0_4px_#f59e0b]";
+                      if (tick.type === "memory") tickColor = "bg-purple-500/60 shadow-[0_0_4px_#a855f7]";
+                      if (tick.type === "hallucination") tickColor = "bg-rose-500 shadow-[0_0_8px_#f43f5e] h-4 z-20 animate-pulse";
+                      if (tick.metadata?.selfCorrection) tickColor = "bg-emerald-500 shadow-[0_0_8px_#10b981] h-4 z-20";
+
+                      return (
+                        <div
+                          key={tick.id}
+                          className={cn("absolute w-0.5 h-2.5 rounded-full -translate-x-1/2 transition-all duration-300", tickColor)}
+                          style={{ left: `${pct}%` }}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  {/* HTML Range Scrubber input */}
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(timelinePosition * 100)}
+                    onChange={(e) => {
+                      const pos = parseInt(e.target.value) / 100;
+                      setTimelinePosition(pos);
+                      computeGraph();
+                    }}
+                    className="w-full h-1.5 appearance-none bg-white/5 rounded-full cursor-pointer z-10 relative
+                      [&::-webkit-slider-thumb]:appearance-none
+                      [&::-webkit-slider-thumb]:w-3
+                      [&::-webkit-slider-thumb]:h-3
+                      [&::-webkit-slider-thumb]:rounded-full
+                      [&::-webkit-slider-thumb]:bg-cyan-400
+                      [&::-webkit-slider-thumb]:shadow-[0_0_12px_rgba(0,242,255,0.8)]
+                      [&::-webkit-slider-thumb]:border
+                      [&::-webkit-slider-thumb]:border-white/50
+                      [&::-webkit-slider-thumb]:cursor-pointer
+                      hover:[&::-webkit-slider-thumb]:scale-110
+                      active:[&::-webkit-slider-thumb]:scale-120
+                      transition-all"
+                  />
+                </div>
+
                 <span className="text-[9px] font-mono text-white/30 w-20 text-right">
                   {Math.ceil(sessionEvents.length * timelinePosition)} /{" "}
                   {sessionEvents.length}
@@ -498,10 +579,26 @@ const ObservatoryInner = () => {
         )}
 
         {/* ── Minimap ── */}
-        <MiniMap 
-          className="!bg-[#020205] !border !border-white/10 !rounded-xl overflow-hidden" 
-          nodeColor="#00f2ff" 
-          maskColor="rgba(0,0,0,0.5)"
+        <MiniMap
+          className="!bg-[#020205]/95 !border !border-white/10 !rounded-xl overflow-hidden shadow-[0_0_20px_rgba(0,242,255,0.04)]"
+          nodeColor={(node) => {
+            const isSelected = node.id === activeNodeId;
+            const isHallucination = node.data?.type === "hallucination";
+            const isCorrection = node.data?.metadata?.selfCorrection;
+            const onPath = useAetherStore.getState().activePathNodeIds.includes(node.id);
+
+            if (isSelected) return isHallucination ? "#ef4444" : isCorrection ? "#10b981" : "#00f2ff";
+            if (isHallucination) return "rgba(244, 63, 94, 0.9)"; // Red Hotspot!
+            if (isCorrection) return "rgba(16, 185, 129, 0.7)";
+            if (onPath) return "rgba(0, 242, 255, 0.4)";
+            return "rgba(255, 255, 255, 0.08)";
+          }}
+          nodeStrokeWidth={1.5}
+          nodeStrokeColor={(node) => {
+            if (node.id === activeNodeId) return "#ffffff";
+            return "transparent";
+          }}
+          maskColor="rgba(2, 2, 5, 0.75)"
           zoomable
           pannable
         />
@@ -570,19 +667,19 @@ const ObservatoryInner = () => {
                   <Brain size={28} className="text-cyan-400 animate-pulse" />
                 </div>
               </div>
-              
+
               <span className="text-[10px] font-mono font-bold uppercase tracking-[0.3em] text-cyan-400">
                 Aether Telemetry Replay
               </span>
-              
+
               <h2 className="text-2xl font-extrabold tracking-tight text-white mt-3 leading-snug">
                 {sessionTitle}
               </h2>
-              
+
               <p className="text-xs text-white/40 mt-3 leading-relaxed">
                 Replaying live agent cognition, memory retrievals, and guardrail interceptions.
               </p>
-              
+
               <div className="mt-8 flex items-center justify-center gap-3">
                 <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
                 <span className="text-[10px] font-mono uppercase tracking-wider text-white/30">
@@ -612,19 +709,19 @@ const ObservatoryInner = () => {
               <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-5 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
                 <CheckCircle2 size={24} className="text-emerald-400" />
               </div>
-              
+
               <span className="text-[10px] font-mono font-extrabold uppercase tracking-[0.25em] text-emerald-400">
                 TRAVERSAL COMPLETE
               </span>
-              
+
               <h3 className="text-xl font-bold text-white mt-2">
                 Replay Completed Successfully
               </h3>
-              
+
               <p className="text-xs text-white/40 mt-3 leading-relaxed px-2">
                 All scheduled thoughts and external tool calls executed safely. Anomalous guardrail breaches corrected with 0 critical failures.
               </p>
-              
+
               <div className="grid grid-cols-3 gap-3 my-6">
                 <div className="bg-white/[0.02] border border-white/5 rounded-xl p-3">
                   <p className="text-[9px] uppercase tracking-wider text-white/30 font-semibold">Nodes</p>
@@ -639,7 +736,7 @@ const ObservatoryInner = () => {
                   <p className="text-base font-mono font-extrabold text-rose-500 mt-1">0</p>
                 </div>
               </div>
-              
+
               <div className="flex gap-3">
                 <button
                   onClick={() => {
