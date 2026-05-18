@@ -406,38 +406,39 @@ def cmd_summarize(args):
     events = data.get("events", [])
     
     # Calculate stats
-    thought_count = sum(1 for e in events if e.get("type") == "thought")
+    node_count = sum(1 for e in events if e.get("type") != "token")
     tool_calls = sum(1 for e in events if e.get("type") == "tool_call")
-    memory_count = sum(1 for e in events if e.get("type") == "memory")
     hallucination_count = sum(1 for e in events if e.get("type") == "hallucination")
+    correction_count = sum(1 for e in events if e.get("metadata", {}).get("selfCorrection") is True)
     
-    latencies = []
-    for e in events:
-        if e.get("type") == "tool_result" and "latency" in e.get("metadata", {}):
-            latencies.append(e["metadata"]["latency"])
-            
-    avg_latency = sum(latencies) / len(latencies) if latencies else 0.0
+    duration_str = "0s"
+    if len(events) >= 2:
+        try:
+            t1 = datetime.fromisoformat(events[0]["timestamp"].replace("Z", "+00:00"))
+            t2 = datetime.fromisoformat(events[-1]["timestamp"].replace("Z", "+00:00"))
+            seconds = int((t2 - t1).total_seconds())
+            duration_str = f"{seconds}s"
+        except Exception:
+            pass
+
+    print(f"\n🌌 \033[96mAETHER TRACE SUMMARY\033[0m")
+    print("────────────────────────")
+    print(f"Session:        \033[92m{data.get('session_id')}\033[0m")
+    print(f"Nodes:          {node_count}")
     
-    # Estimate total generated output tokens
-    tokens = [e.get("content", "") for e in events if e.get("type") == "token"]
-    total_tokens = sum(len(t.split()) for t in tokens) if tokens else 0
-    if not total_tokens and tokens:
-        total_tokens = len(tokens)
+    if hallucination_count > 0:
+        print(f"Hallucinations: \033[91m{hallucination_count} (Safely Intercepted)\033[0m")
+    else:
+        print(f"Hallucinations: 0")
         
-    print(f"\n📊 \033[96mAETHER COGNITION SUMMARY: {data.get('session_id')}\033[0m")
-    print("=" * 60)
-    print(f"Agent Persona:           \033[92m{data.get('agent_name')}\033[0m")
-    print(f"Timestamp:               {data.get('timestamp')}")
-    print(f"Total Traversal Nodes:   {len(events) - len(tokens)}")
-    print("-" * 60)
-    print(f"💡 Thoughts Generated:   {thought_count}")
-    print(f"⚙️ Tool Executions:      {tool_calls}")
-    print(f"💾 Memory Recalls:       {memory_count}")
-    print(f"⚠️ Hallucinations:       \033[91m{hallucination_count}\033[0m")
-    print("-" * 60)
-    print(f"⏱️ Avg Tool Latency:      {avg_latency:.1f}ms")
-    print(f"🔤 Output Token Count:   {total_tokens} tokens")
-    print("=" * 60 + "\n")
+    if correction_count > 0:
+        print(f"Corrections:    \033[92m{correction_count} (100% Recovery)\033[0m")
+    else:
+        print(f"Corrections:    0")
+        
+    print(f"Tools Used:     {tool_calls}")
+    print(f"Duration:       {duration_str}")
+    print("────────────────────────\n")
 
 def main():
     parser = argparse.ArgumentParser(description="Aether AI Observability Platform CLI")

@@ -1,32 +1,38 @@
-# Aether 🌌 — Git + DevTools for AI Cognition
+# Aether 🌌 — Replay and debug AI cognition visually.
 
 ### **Watch AI agents think in realtime. Inspect reasoning trees, replay traces offline, auto-trace OpenAI & LangChain, and debug hallucinations inside VSCode.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](https://opensource.org/licenses/MIT)
 [![PyPI Version](https://img.shields.io/pypi/v/aether-observe.svg?color=purple)](https://pypi.org/project/aether-observe/)
-[![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployment-blue.svg)](https://aether-observatory.vercel.app)
-[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/spaces)
-
-Aether is a highly-optimized, **local-first** developer platform for replaying cognitive reasoning trees, auditing memory recall, and debugging AI hallucinations. Built specifically to feel like **"Git + Chrome DevTools for agent reasoning"**, Aether captures structured trace paths on disk and replays them beautifully on a high-performance offline visualizer running at 60fps.
+[![Vercel Replay](https://img.shields.io/badge/Vercel-Interactive_Observatory-cyan.svg)](https://aether-observatory.vercel.app)
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-yellow)](https://huggingface.co/spaces/Sammy1808/aether)
 
 ---
 
-## 📽️ Visual Replay Showcase
+## 📽️ Visual Replay Showcase (Hallucination Detection & Self-Correction)
 
-### Hallucination Detection & Safe Self-Correction
-Observe how Aether isolates cognitive branching and highlights high-risk safety violations. The active node glows with a strong pulsing rose flare, pausing playback naturally for developer debugging:
+Observe how Aether isolates cognitive branching, intercepting security violations. The active node glows with a strong pulsing rose flare, pausing playback to guide visual debugging:
 
 ![Hallucination Correction Visual](./docs/assets/hero_hallucination.png)
 
-> [!TIP]
-> **Deterministic Replay Timeline:**
-> Aether converts live agent traces into lightweight JSON sessions. Scrub the timeline at the bottom, rewind to the first node, or press play to watch the progressive birth scaling and link trails cascade through the reasoning tree:
-> 
-> ![Replay Scrubbing Animation](./docs/assets/replay_loop.webp)
+### ⚡ Quick 3-Step Install
+
+```bash
+# 1. Install our SDK & CLI runner
+pip install aether-observe
+
+# 2. Launch the offline Observatory Replay Visualizer
+aether replay
+
+# 3. Instrument your agent in 1 line
+from aether import AgentTracer
+```
 
 ---
 
 ## 💡 Why Aether?
+
+AI agents are becoming impossible to debug with logs alone. Aether lets developers **replay reasoning like source code execution**, visually traversing thoughts, vector memories, external tool calls, and safety recovery guardrails in real-time.
 
 *   🏡 **Local-First & Private:** Traces are saved locally in `.aether/traces/` as portable JSON runs. No cloud database, no third-party APIs, and zero infrastructure cost.
 *   ⏱️ **Offline stand-alone Visualizer:** The PyPI package comes completely pre-bundled with a fully compiled Next.js visualizer. Spin up the server with `aether replay` and play back trace sessions completely offline, instantly.

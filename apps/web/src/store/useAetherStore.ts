@@ -109,7 +109,7 @@ export const useAetherStore = create<AetherState>((set) => ({
 
     const dagreGraph = new dagre.graphlib.Graph();
     dagreGraph.setDefaultEdgeLabel(() => ({}));
-    dagreGraph.setGraph({ rankdir: 'LR', nodesep: 70, ranksep: 100 });
+    dagreGraph.setGraph({ rankdir: 'LR', nodesep: 42, ranksep: 58 });
 
     // Filter events by timeline and remove tokens (tokens are for sidebar only)
     const count = Math.ceil(state.events.length * state.timelinePosition);

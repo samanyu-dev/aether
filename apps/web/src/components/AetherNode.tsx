@@ -1,5 +1,5 @@
 "use client";
-import React, { memo, useState } from "react";
+import React, { memo, useState, useMemo } from "react";
 import { Handle, Position } from "reactflow";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LucideProps } from "lucide-react";
@@ -149,19 +149,35 @@ const AetherNode = ({ data }: { data: AetherNodeData }) => {
 
   const isActive = data.id === activeNodeId;
 
+  // Dynamic Node Sizing & Widths for cinematic visual hierarchy
+  const nodeStyles = useMemo(() => {
+    const isRoot = !data.parentId;
+    if (isRoot) return { minWidth: "265px", scale: 1.06, shadow: "shadow-[0_0_45px_rgba(0,242,255,0.22)] border-cyan-500/50" };
+    if (data.type === "hallucination") return { minWidth: "245px", scale: 1.03, shadow: "shadow-[0_0_40px_rgba(244,63,94,0.25)] border-rose-500/50" };
+    if (data.type === "tool_call" || data.type === "tool_result") return { minWidth: "220px", scale: 1.0, shadow: "shadow-[0_0_20px_rgba(245,158,11,0.12)] border-amber-500/30" };
+    if (data.type === "memory") return { minWidth: "220px", scale: 1.0, shadow: "shadow-[0_0_20px_rgba(168,85,247,0.12)] border-purple-500/30" };
+    if (data.type === "token") return { minWidth: "170px", scale: 0.94, shadow: "shadow-sm border-slate-500/20" };
+    if (data.type === "system") return { minWidth: "150px", scale: 0.9, shadow: "shadow-none border-slate-500/10" };
+    return { minWidth: "220px", scale: 1.0, shadow: "border-white/10" };
+  }, [data.parentId, data.type]);
+
   return (
     <motion.div
-      initial={{ scale: 0.8, opacity: 0, filter: "blur(8px)" }}
-      animate={{ scale: 1, opacity: 1, filter: "blur(0px)" }}
+      initial={{ scale: 0.75, opacity: 0, filter: "blur(8px)" }}
+      animate={{ 
+        scale: isActive ? nodeStyles.scale * 1.04 : nodeStyles.scale,
+        opacity: 1, 
+        filter: "blur(0px)" 
+      }}
       transition={{
         duration: 0.65,
         delay: 0.35, // Delays node card materialization so the edge sweep plays first!
         ease: "easeOut",
       }}
+      style={{ minWidth: nodeStyles.minWidth }}
       className={cn(
-        "relative group cursor-pointer select-none",
-        "min-w-[220px] max-w-[320px]",
-        !isOnActivePath && "opacity-20 blur-[0.5px] saturate-50 pointer-events-none hover:opacity-40 transition-all duration-500"
+        "relative group cursor-pointer select-none max-w-[320px]",
+        !isOnActivePath && "opacity-15 blur-[0.5px] saturate-50 pointer-events-none hover:opacity-30 transition-all duration-500"
       )}
       onClick={() => {
         useAetherStore.getState().setSelectedEvent(data.id);
@@ -205,10 +221,9 @@ const AetherNode = ({ data }: { data: AetherNodeData }) => {
           "bg-[rgba(8,8,16,0.85)] backdrop-blur-xl",
           config.borderColor,
           config.bgGlow,
-          isHallucination && "animate-pulse-subtle border-rose-500/60 shadow-[0_0_40px_rgba(244,63,94,0.25)]",
-          !data.parentId && "scale-[1.02] shadow-[0_0_40px_rgba(0,242,255,0.15)] border-cyan-500/50",
-          data.type === "tool_call" && "animate-pulse-subtle border-amber-500/60 shadow-[0_0_20px_rgba(245,158,11,0.15)]",
-          data.type === "memory" && "border-purple-500/50",
+          nodeStyles.shadow,
+          isHallucination && "animate-pulse-subtle shadow-[0_0_40px_rgba(244,63,94,0.25)]",
+          data.type === "tool_call" && "animate-pulse-subtle shadow-[0_0_20px_rgba(245,158,11,0.15)]",
           isActive && "border-cyan-400 shadow-[0_0_35px_rgba(0,242,255,0.2)]"
         )}
       >
