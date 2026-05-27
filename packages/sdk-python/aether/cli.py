@@ -283,7 +283,7 @@ def cmd_doctor(args):
     
     # 1. System Version
     print(f"Python Version:   \033[92m{sys.version.split()[0]}\033[0m")
-    print(f"Aether Version:   \033[92m0.2.0a1\033[0m")
+    print(f"Aether Version:   \033[92m0.1.0b1\033[0m")
     
     # 2. Workspace Check
     print("\nChecking Workspace Directories:")
@@ -440,6 +440,226 @@ def cmd_summarize(args):
     print(f"Duration:       {duration_str}")
     print("────────────────────────\n")
 
+def load_trace(source):
+    if os.path.exists(source):
+        try:
+            with open(source, "r") as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"\033[91mError reading file {source}: {e}\033[0m")
+            return None
+    
+    # Try searching in .aether/traces/
+    trace_files = glob(".aether/traces/*.json")
+    for tf in trace_files:
+        if source in tf or source in os.path.basename(tf):
+            try:
+                with open(tf, "r") as f:
+                    return json.load(f)
+            except Exception:
+                pass
+    return None
+
+def cmd_diff(args):
+    baseline_data = load_trace(args.baseline)
+    experiment_data = load_trace(args.experiment)
+    
+    if not baseline_data:
+        print(f"\033[91m[Aether CLI] Failed to find or load baseline trace: {args.baseline}\033[0m")
+        return
+    if not experiment_data:
+        print(f"\033[91m[Aether CLI] Failed to find or load experiment trace: {args.experiment}\033[0m")
+        return
+
+    # Filter out tokens to focus on reasoning nodes
+    baseline_events = [e for e in baseline_data.get("events", []) if e.get("type") != "token"]
+    experiment_events = [e for e in experiment_data.get("events", []) if e.get("type") != "token"]
+
+    # Hybrid sequence matching: match by ID first, fallback to sequential types
+    pairs_by_id = []
+    unmatched_baseline = list(baseline_events)
+    unmatched_experiment = list(experiment_events)
+    
+    for exp in list(unmatched_experiment):
+        base_match = next((b for b in unmatched_baseline if b["id"] == exp["id"]), None)
+        if base_match:
+            pairs_by_id.append((base_match, exp))
+            unmatched_baseline.remove(base_match)
+            unmatched_experiment.remove(exp)
+            
+    pairs_by_type = []
+    for exp in list(unmatched_experiment):
+        base_match = next((b for b in unmatched_baseline if b["type"] == exp["type"]), None)
+        if base_match:
+            pairs_by_type.append((base_match, exp))
+            unmatched_baseline.remove(base_match)
+            unmatched_experiment.remove(exp)
+
+    # Reconstruct unified flow
+    comparison_flow = []
+    emitted_baseline = set()
+    all_pairs = pairs_by_id + pairs_by_type
+    
+    for exp in experiment_events:
+        pair = next((p for p in all_pairs if p[1]["id"] == exp["id"]), None)
+        if pair:
+            base = pair[0]
+            # Emit deleted baseline nodes that appeared before 'base'
+            try:
+                base_idx = baseline_events.index(base)
+                for i in range(base_idx):
+                    b_prev = baseline_events[i]
+                    is_deleted = not any(p[0]["id"] == b_prev["id"] for p in all_pairs)
+                    if is_deleted and b_prev["id"] not in emitted_baseline:
+                        comparison_flow.append((b_prev, None))
+                        emitted_baseline.add(b_prev["id"])
+            except ValueError:
+                pass
+                
+            comparison_flow.append((base, exp))
+            emitted_baseline.add(base["id"])
+        else:
+            # Added node
+            comparison_flow.append((None, exp))
+            
+    # Emit remaining deleted baseline nodes
+    for b_prev in baseline_events:
+        is_deleted = not any(p[0]["id"] == b_prev["id"] for p in all_pairs)
+        if is_deleted and b_prev["id"] not in emitted_baseline:
+            comparison_flow.append((b_prev, None))
+            emitted_baseline.add(b_prev["id"])
+
+    # Render gorgeous side-by-side terminal comparison
+    col_width = 54
+    print(f"\n🌌 \033[96mAETHER COGNITIVE DIFF RUN ENGINE\033[0m")
+    print("=" * (col_width * 2 + 7))
+    print(f"\033[95m{'BASELINE (LEFT): ' + baseline_data.get('session_id', 'Session A'):<{col_width}}\033[0m | \033[92m{'EXPERIMENT (RIGHT): ' + experiment_data.get('session_id', 'Session B'):<{col_width}}\033[0m")
+    print("=" * (col_width * 2 + 7))
+
+    nodes_added = 0
+    nodes_removed = 0
+    nodes_modified = 0
+    nodes_unchanged = 0
+
+    def truncate_content(text, width):
+        if not text:
+            return ""
+        text = text.replace("\n", " ")
+        if len(text) > width - 4:
+            return text[:width - 7] + "..."
+        return text
+
+    for base, exp in comparison_flow:
+        left_str = ""
+        right_str = ""
+        connector = "|"
+        
+        if base is None:
+            # Added node
+            nodes_added += 1
+            node_type = exp.get("type", "thought").upper()
+            label = f"[🆕 +{node_type}] {exp.get('content', '')}"
+            right_str = f"\033[92m{truncate_content(label, col_width):<{col_width}}\033[0m"
+            left_str = " " * col_width
+            connector = "\033[92m+\033[0m"
+        elif exp is None:
+            # Deleted node
+            nodes_removed += 1
+            node_type = base.get("type", "thought").upper()
+            label = f"[❌ -{node_type}] {base.get('content', '')}"
+            left_str = f"\033[91m{truncate_content(label, col_width):<{col_width}}\033[0m"
+            right_str = " " * col_width
+            connector = "\033[91m-\033[0m"
+        else:
+            # Compare both
+            node_type = exp.get("type", "thought").upper()
+            base_content = base.get("content", "")
+            exp_content = exp.get("content", "")
+            
+            is_modified = base_content != exp_content or base.get("type") != exp.get("type")
+            
+            # Latency checks
+            base_lat = base.get("metadata", {}).get("latency")
+            exp_lat = exp.get("metadata", {}).get("latency")
+            lat_badge = ""
+            if base_lat is not None and exp_lat is not None:
+                delta = int(exp_lat) - int(base_lat)
+                if delta < 0:
+                    lat_badge = f" [⚡ {delta}ms]"
+                elif delta > 0:
+                    lat_badge = f" [⚠ +{delta}ms]"
+            
+            # Confidence checks
+            base_conf = base.get("metadata", {}).get("confidence")
+            exp_conf = exp.get("metadata", {}).get("confidence")
+            conf_badge = ""
+            if base_conf is not None and exp_conf is not None:
+                delta_conf = float(exp_conf) - float(base_conf)
+                if delta_conf < -0.02:
+                    conf_badge = f" [↘ {int(delta_conf * 100)}% Collapse]"
+                elif delta_conf > 0.02:
+                    conf_badge = f" [↗ +{int(delta_conf * 100)}%]"
+
+            if is_modified:
+                nodes_modified += 1
+                l_label = f"[⚡ *{node_type}] {base_content}"
+                r_label = f"[⚡ *{node_type}] {exp_content}{lat_badge}{conf_badge}"
+                left_str = f"\033[93m{truncate_content(l_label, col_width):<{col_width}}\033[0m"
+                right_str = f"\033[93m{truncate_content(r_label, col_width):<{col_width}}\033[0m"
+                connector = "\033[93m*\033[0m"
+            else:
+                nodes_unchanged += 1
+                badge_info = f"{lat_badge}{conf_badge}"
+                l_label = f"[{node_type}] {base_content}"
+                r_label = f"[{node_type}] {exp_content}{badge_info}"
+                left_str = f"\033[90m{truncate_content(l_label, col_width):<{col_width}}\033[0m"
+                right_str = f"\033[94m{truncate_content(r_label, col_width):<{col_width}}\033[0m"
+                connector = "|"
+                
+        print(f"{left_str} {connector} {right_str}")
+        
+        # Show argument diffs for modified tool calls
+        if base and exp and base.get("type") == "tool_call" and exp.get("type") == "tool_call":
+            base_args = base.get("metadata", {}).get("args", {})
+            exp_args = exp.get("metadata", {}).get("args", {})
+            if base_args != exp_args:
+                try:
+                    b_args_str = json.dumps(base_args)
+                    e_args_str = json.dumps(exp_args)
+                    if len(b_args_str) > col_width - 15: b_args_str = b_args_str[:col_width - 18] + "..."
+                    if len(e_args_str) > col_width - 15: e_args_str = e_args_str[:col_width - 18] + "..."
+                    diff_left = f"    └─ Args: {b_args_str}"
+                    diff_right = f"    └─ Args: {e_args_str} [Mutated]"
+                    print(f"\033[93m{diff_left:<{col_width}}\033[0m | \033[93m{diff_right:<{col_width}}\033[0m")
+                except Exception:
+                    pass
+
+    print("=" * (col_width * 2 + 7))
+    print(f"📊 \033[96mDIFF METRICS SUMMARY:\033[0m")
+    print(f"  - Nodes Added:      \033[92m{nodes_added}\033[0m")
+    print(f"  - Nodes Removed:    \033[91m{nodes_removed}\033[0m")
+    print(f"  - Nodes Modified:   \033[93m{nodes_modified}\033[0m")
+    print(f"  - Nodes Unchanged:  \033[94m{nodes_unchanged}\033[0m")
+    
+    # Net latency shift summary
+    try:
+        t_base_start = datetime.fromisoformat(baseline_events[0]["timestamp"].replace("Z", "+00:00"))
+        t_base_end = datetime.fromisoformat(baseline_events[-1]["timestamp"].replace("Z", "+00:00"))
+        t_exp_start = datetime.fromisoformat(experiment_events[0]["timestamp"].replace("Z", "+00:00"))
+        t_exp_end = datetime.fromisoformat(experiment_events[-1]["timestamp"].replace("Z", "+00:00"))
+        
+        base_dur = int((t_base_end - t_base_start).total_seconds() * 1000)
+        exp_dur = int((t_exp_end - t_exp_start).total_seconds() * 1000)
+        net_shift = exp_dur - base_dur
+        
+        if net_shift < 0:
+            print(f"  - Net Latency:      \033[92m{abs(net_shift)}ms GAIN\033[0m ({base_dur}ms -> {exp_dur}ms)")
+        else:
+            print(f"  - Net Latency:      \033[91m{net_shift}ms LOSS\033[0m ({base_dur}ms -> {exp_dur}ms)")
+    except Exception:
+        pass
+    print("=" * (col_width * 2 + 7) + "\n")
+
 def main():
     parser = argparse.ArgumentParser(description="Aether AI Observability Platform CLI")
     subparsers = parser.add_subparsers(dest="command", help="CLI commands")
@@ -472,6 +692,11 @@ def main():
     # summarize command
     summarize_parser = subparsers.add_parser("summarize", help="Compute execution metrics, latency, and tokens")
     summarize_parser.add_argument("session_id", nargs="?", help="Specific session ID to summarize")
+
+    # diff command
+    diff_parser = subparsers.add_parser("diff", help="Git-style cognitive diff comparing two trace sessions")
+    diff_parser.add_argument("baseline", help="Baseline trace path or session ID")
+    diff_parser.add_argument("experiment", help="Experiment trace path or session ID")
     
     args = parser.parse_args()
     
@@ -494,6 +719,8 @@ def main():
         cmd_export(args)
     elif args.command == "summarize":
         cmd_summarize(args)
+    elif args.command == "diff":
+        cmd_diff(args)
     elif args.command == "open":
         # Launch replay command to act as open
         args.port = 3000

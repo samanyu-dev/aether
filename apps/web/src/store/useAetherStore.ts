@@ -10,6 +10,13 @@ export interface AetherEvent {
   parentId?: string;
   content: string;
   metadata?: Record<string, string | number | boolean | null | undefined>;
+  diff?: {
+    status: 'added' | 'deleted' | 'modified' | 'unchanged';
+    latencyDelta?: number;
+    confidenceDelta?: number;
+    originalContent?: string;
+    changedKeys?: string[];
+  };
 }
 
 interface AetherState {
@@ -25,6 +32,10 @@ interface AetherState {
   activeNodeId: string | null;
   activePathNodeIds: string[];
   
+  // Comparison fields
+  comparisonEvents: AetherEvent[] | null;
+  comparisonMode: boolean;
+  
   // Actions
   addEvent: (event: AetherEvent) => void;
   addEvents: (events: AetherEvent[]) => void;
@@ -36,6 +47,7 @@ interface AetherState {
   clearActiveEvents: () => void;
   setSelectedEvent: (id: string | null) => void;
   loadReplay: (events: AetherEvent[]) => void;
+  loadComparison: (baseline: AetherEvent[], experiment: AetherEvent[]) => void;
 }
 
 export const useAetherStore = create<AetherState>((set) => ({
@@ -50,6 +62,8 @@ export const useAetherStore = create<AetherState>((set) => ({
   timelinePosition: 1,
   activeNodeId: null,
   activePathNodeIds: [],
+  comparisonEvents: null,
+  comparisonMode: false,
 
   setSelectedEvent: (id) => set({ selectedEventId: id }),
 
@@ -96,7 +110,9 @@ export const useAetherStore = create<AetherState>((set) => ({
       activeSession: sessionId,
       events: [],
       nodes: [],
-      edges: []
+      edges: [],
+      comparisonEvents: null,
+      comparisonMode: false
     });
   },
 
@@ -120,6 +136,94 @@ export const useAetherStore = create<AetherState>((set) => ({
       visibleEvents = visibleEvents.slice(-50);
     }
 
+    let unifiedEvents: (AetherEvent & { diff?: { status: 'added' | 'deleted' | 'modified' | 'unchanged'; latencyDelta?: number; confidenceDelta?: number; originalContent?: string; changedKeys?: string[] } })[] = [];
+
+    if (state.comparisonMode && state.comparisonEvents) {
+      const baseEvents = state.comparisonEvents.filter(e => e.type !== 'token');
+      
+      const unmatchedBase = [...baseEvents];
+      const unmatchedExp = [...visibleEvents];
+      const matchedPairs: { base: AetherEvent; exp: AetherEvent }[] = [];
+
+      // First pass: match by explicit ID
+      for (let i = unmatchedExp.length - 1; i >= 0; i--) {
+        const exp = unmatchedExp[i];
+        const baseMatchIdx = unmatchedBase.findIndex(b => b.id === exp.id);
+        if (baseMatchIdx !== -1) {
+          matchedPairs.push({ base: unmatchedBase[baseMatchIdx], exp });
+          unmatchedBase.splice(baseMatchIdx, 1);
+          unmatchedExp.splice(i, 1);
+        }
+      }
+
+      // Second pass: sequential type-based fallback matching for remaining unmatched nodes
+      for (let i = unmatchedExp.length - 1; i >= 0; i--) {
+        const exp = unmatchedExp[i];
+        const baseMatchIdx = unmatchedBase.findIndex(b => b.type === exp.type);
+        if (baseMatchIdx !== -1) {
+          matchedPairs.push({ base: unmatchedBase[baseMatchIdx], exp });
+          unmatchedBase.splice(baseMatchIdx, 1);
+          unmatchedExp.splice(i, 1);
+        }
+      }
+
+      // Now build unified events
+      // 1. Add experiment events (either matched or added)
+      visibleEvents.forEach(exp => {
+        const pair = matchedPairs.find(p => p.exp.id === exp.id);
+        if (pair) {
+          const base = pair.base;
+          const isModified = base.content !== exp.content || base.type !== exp.type;
+          
+          let latencyDelta: number | undefined = undefined;
+          const baseLat = base.metadata?.latency;
+          const expLat = exp.metadata?.latency;
+          if (baseLat !== undefined && expLat !== undefined) {
+            latencyDelta = Number(expLat) - Number(baseLat);
+          }
+
+          let confidenceDelta: number | undefined = undefined;
+          const baseConf = base.metadata?.confidence;
+          const expConf = exp.metadata?.confidence;
+          if (baseConf !== undefined && expConf !== undefined) {
+            confidenceDelta = Number(expConf) - Number(baseConf);
+          }
+
+          unifiedEvents.push({
+            ...exp,
+            diff: {
+              status: isModified ? 'modified' : 'unchanged',
+              latencyDelta,
+              confidenceDelta,
+              originalContent: base.content
+            }
+          });
+        } else {
+          unifiedEvents.push({
+            ...exp,
+            diff: {
+              status: 'added'
+            }
+          });
+        }
+      });
+
+      // 2. Add unmatched baseline events as deleted ghost nodes
+      unmatchedBase.forEach(base => {
+        unifiedEvents.push({
+          ...base,
+          diff: {
+            status: 'deleted'
+          }
+        });
+      });
+    } else {
+      unifiedEvents = visibleEvents.map(e => ({
+        ...e,
+        diff: undefined
+      }));
+    }
+
     // Compute active ID
     const activeId = visibleEvents[visibleEvents.length - 1]?.id || null;
     
@@ -135,7 +239,7 @@ export const useAetherStore = create<AetherState>((set) => ({
     }
 
     // Create Nodes
-    const newNodes: Node[] = visibleEvents.map((event, index) => {
+    const newNodes: Node[] = unifiedEvents.map((event, index) => {
       const node = {
         id: event.id,
         type: 'aetherNode',
@@ -148,23 +252,30 @@ export const useAetherStore = create<AetherState>((set) => ({
 
     // Create Edges
     const newEdges: Edge[] = [];
-    visibleEvents.forEach((event) => {
+    unifiedEvents.forEach((event) => {
       if (event.parentId) {
-        const isTargetActive = event.id === activeId;
-        const isHallucination = event.type === "hallucination";
-        
-        newEdges.push({
-          id: `e-${event.parentId}-${event.id}`,
-          source: event.parentId,
-          target: event.id,
-          type: "aetherEdge",
-          data: {
-            isActive: isTargetActive,
-            isHallucination: isHallucination,
-            isDestabilized: isTargetActive && isHallucination,
-          },
-        });
-        dagreGraph.setEdge(event.parentId, event.id);
+        const parentExists = unifiedEvents.some(e => e.id === event.parentId);
+        if (parentExists) {
+          const isTargetActive = event.id === activeId;
+          const isHallucination = event.type === "hallucination";
+          const diffStatus = event.diff?.status || 'unchanged';
+          const latencyDelta = event.diff?.latencyDelta;
+          
+          newEdges.push({
+            id: `e-${event.parentId}-${event.id}`,
+            source: event.parentId,
+            target: event.id,
+            type: "aetherEdge",
+            data: {
+              isActive: isTargetActive,
+              isHallucination: isHallucination,
+              isDestabilized: isTargetActive && isHallucination,
+              diffStatus,
+              latencyDelta,
+            },
+          });
+          dagreGraph.setEdge(event.parentId, event.id);
+        }
       }
     });
 
@@ -172,7 +283,7 @@ export const useAetherStore = create<AetherState>((set) => ({
     dagre.layout(dagreGraph);
 
     // Pre-parse a dictionary of visible events for fast lookup
-    const eventMap = new Map(visibleEvents.map(e => [e.id, e]));
+    const eventMap = new Map(unifiedEvents.map(e => [e.id, e]));
 
     const layoutedNodes = newNodes.map((node) => {
       const nodeWithPosition = dagreGraph.node(node.id);
@@ -198,7 +309,7 @@ export const useAetherStore = create<AetherState>((set) => ({
 
         // 3. Organic staggering for tool chains and thoughts
         // Creates vertical offsets and staggered branch elegance
-        const staggerIndex = event.parentId ? visibleEvents.findIndex(e => e.id === event.id) : 0;
+        const staggerIndex = event.parentId ? unifiedEvents.findIndex(e => e.id === event.id) : 0;
         if (event.type !== "memory" && event.parentId) {
           posY += Math.sin(staggerIndex * 2.5) * 15;
         }
@@ -247,6 +358,19 @@ export const useAetherStore = create<AetherState>((set) => ({
     };
   }),
 
+  loadComparison: (baseline, experiment) => set((state) => {
+    if (!experiment || experiment.length === 0) return state;
+    const targetSession = experiment[0].sessionId || "comparison-run";
+    return {
+      events: experiment,
+      comparisonEvents: baseline,
+      comparisonMode: true,
+      activeSession: targetSession,
+      timelinePosition: 1, // Full comparison immediately
+      sessions: Array.from(new Set([...state.sessions, targetSession])),
+    };
+  }),
+
   clearActiveEvents: () => set({ 
     events: [], 
     nodes: [], 
@@ -254,6 +378,8 @@ export const useAetherStore = create<AetherState>((set) => ({
     activeSession: null, 
     timelinePosition: 0,
     activeNodeId: null,
-    activePathNodeIds: []
+    activePathNodeIds: [],
+    comparisonEvents: null,
+    comparisonMode: false
   }),
 }));

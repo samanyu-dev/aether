@@ -1,200 +1,16 @@
 {
   "session_id": "demo-session",
   "agent_name": "ArchitectGPT",
-  "timestamp": "2026-05-17T17:15:27.419616+00:00",
-  "event_count": 53,
+  "timestamp": "2026-05-20T09:39:59.114051+00:00",
+  "event_count": 67,
   "events": [
     {
-      "id": "357292c1-849a-4b81-b7dc-4ffd0e5ae2e9",
+      "id": "0e5b4a9f-e419-47ed-879e-7c0358ef6dee",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:16.252032+00:00",
+      "timestamp": "2026-05-20T09:39:46.150950+00:00",
       "type": "thought",
       "parentId": null,
-      "content": "Analyzing objective: 'Build a scalable Redis caching layer'",
-      "metadata": {
-        "confidence": 0.98,
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "2f665bad-71a0-4445-9c8e-ff7954faa775",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:17.055314+00:00",
-      "type": "thought",
-      "parentId": "357292c1-849a-4b81-b7dc-4ffd0e5ae2e9",
-      "content": "Formulating multi-step architecture plan.",
-      "metadata": {
-        "confidence": 0.92,
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "7a285fb8-0afe-4176-ad51-c68ac7f1b08a",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:17.662095+00:00",
-      "type": "tool_call",
-      "parentId": "2f665bad-71a0-4445-9c8e-ff7954faa775",
-      "content": "Calling vector_search",
-      "metadata": {
-        "toolName": "vector_search",
-        "args": {
-          "query": "Redis cluster optimal config",
-          "k": 3
-        },
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "82eee4e3-ebbe-41d6-ad27-973b955c8c37",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:18.066383+00:00",
-      "type": "tool_call",
-      "parentId": "2f665bad-71a0-4445-9c8e-ff7954faa775",
-      "content": "Calling grep_codebase",
-      "metadata": {
-        "toolName": "grep_codebase",
-        "args": {
-          "pattern": "import redis"
-        },
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "fca149b2-50bf-4734-bb4f-075b454ae986",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:19.270283+00:00",
-      "type": "tool_result",
-      "parentId": "7a285fb8-0afe-4176-ad51-c68ac7f1b08a",
-      "content": "{\"results\": [\"Use redis-py cluster mode\", \"Enable connection pooling\", \"Set maxmemory-policy allkeys-lru\"]}",
-      "metadata": {
-        "success": true,
-        "latency": 412,
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "d2f53ac9-c631-4b4c-afa1-ee306505b6dc",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:19.775844+00:00",
-      "type": "tool_result",
-      "parentId": "82eee4e3-ebbe-41d6-ad27-973b955c8c37",
-      "content": "{\"matches\": \"Found 4 legacy redis connections in /utils/cache.py\"}",
-      "metadata": {
-        "success": true,
-        "latency": 189,
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "aec5d902-56f7-4e48-b471-41a7fbc5081e",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:20.577554+00:00",
-      "type": "memory",
-      "parentId": "357292c1-849a-4b81-b7dc-4ffd0e5ae2e9",
-      "content": "Retrieving project architecture guidelines",
-      "metadata": {
-        "source": "pinecone",
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "e85f8006-f5a5-4c80-be7c-af90ed546837",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:21.182838+00:00",
-      "type": "thought",
-      "parentId": "aec5d902-56f7-4e48-b471-41a7fbc5081e",
-      "content": "Guideline: All new services must use async I/O.",
-      "metadata": {
-        "confidence": 1.0,
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "ef772c65-3c5b-4e77-bbed-f37a11b85886",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:21.683618+00:00",
-      "type": "thought",
-      "parentId": "2f665bad-71a0-4445-9c8e-ff7954faa775",
-      "content": "Synthesizing requirements: Need async redis cluster pool, migrating from legacy sync cache.py.",
-      "metadata": {
-        "confidence": 0.89,
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "ca5a40c6-2ba8-4773-8b38-bccfb39d248a",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:22.588979+00:00",
-      "type": "hallucination",
-      "parentId": "82eee4e3-ebbe-41d6-ad27-973b955c8c37",
-      "content": "Warning: Legacy cache.py uses pickle serialization. AI is suggesting JSON which might break existing cached bytes.",
-      "metadata": {
-        "severity": "high",
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "533ccd39-2e9f-4299-8ea2-7d4928b94452",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:23.195447+00:00",
-      "type": "tool_call",
-      "parentId": "ef772c65-3c5b-4e77-bbed-f37a11b85886",
-      "content": "Calling write_file",
-      "metadata": {
-        "toolName": "write_file",
-        "args": {
-          "filepath": "/utils/async_cache.py",
-          "lines": 45
-        },
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "fa7681da-983e-41f4-9c7a-fc8d164bf3e8",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:23.600280+00:00",
-      "type": "tool_result",
-      "parentId": "533ccd39-2e9f-4299-8ea2-7d4928b94452",
-      "content": "{\"status\": \"success\", \"bytes_written\": 2048}",
-      "metadata": {
-        "success": true,
-        "latency": 8,
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "a47f536e-51a7-436c-90ca-4da76da3e1f7",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:24.204708+00:00",
-      "type": "thought",
-      "parentId": "ef772c65-3c5b-4e77-bbed-f37a11b85886",
-      "content": "Revising implementation: Added pickle fallback compatibility layer to prevent cache miss errors on deployment.",
-      "metadata": {
-        "selfCorrection": true,
-        "confidence": 0.95,
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.006721+00:00",
-      "type": "thought",
-      "parentId": "357292c1-849a-4b81-b7dc-4ffd0e5ae2e9",
-      "content": "Architecture complete. Streaming final summary.",
+      "content": "User request received: Design a scalable multi-region AI memory service with low latency failover.",
       "metadata": {
         "confidence": 0.99,
         "agentName": "ArchitectGPT",
@@ -202,47 +18,323 @@
       }
     },
     {
-      "id": "51199947-b910-45dc-9b7e-5f67ff4d89e1",
+      "id": "4f7afb79-87e8-4d26-a027-0998b1246191",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.408610+00:00",
+      "timestamp": "2026-05-20T09:39:46.956843+00:00",
+      "type": "thought",
+      "parentId": "0e5b4a9f-e419-47ed-879e-7c0358ef6dee",
+      "content": "Breaking objective into architecture, infrastructure, caching, and deployment tasks.",
+      "metadata": {
+        "confidence": 0.96,
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "ee84a570-47c1-42d1-8439-a393dad9c3c1",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:47.658438+00:00",
+      "type": "tool_call",
+      "parentId": "4f7afb79-87e8-4d26-a027-0998b1246191",
+      "content": "Calling vector_search",
+      "metadata": {
+        "toolName": "vector_search",
+        "args": {
+          "query": "multi-region Redis + pgvector architecture",
+          "top_k": 3
+        },
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "7a5edfb4-d064-4eeb-99b4-ac1f74570bb3",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:47.659149+00:00",
+      "type": "tool_call",
+      "parentId": "4f7afb79-87e8-4d26-a027-0998b1246191",
+      "content": "Calling grep_codebase",
+      "metadata": {
+        "toolName": "grep_codebase",
+        "args": {
+          "pattern": "redis|postgres|asyncpg",
+          "path": "/services"
+        },
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "dd4ada6b-826f-4d93-8fca-2c406558b498",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:47.659685+00:00",
+      "type": "tool_call",
+      "parentId": "4f7afb79-87e8-4d26-a027-0998b1246191",
+      "content": "Calling cloud_cost_estimator",
+      "metadata": {
+        "toolName": "cloud_cost_estimator",
+        "args": {
+          "provider": "aws",
+          "regions": [
+            "us-east-1",
+            "eu-west-1"
+          ]
+        },
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "391447be-858a-4234-b352-b878b91401c3",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:48.665210+00:00",
+      "type": "tool_result",
+      "parentId": "ee84a570-47c1-42d1-8439-a393dad9c3c1",
+      "content": "{\"results\": [\"Redis Cluster recommended for hot cache\", \"pgvector suitable for semantic memory\", \"Use async connection pooling\"]}",
+      "metadata": {
+        "success": true,
+        "latency": 322,
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "6d6e2fa9-d2b1-4def-8746-a25eca537299",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:48.666479+00:00",
+      "type": "tool_result",
+      "parentId": "7a5edfb4-d064-4eeb-99b4-ac1f74570bb3",
+      "content": "{\"matches\": [\"/services/cache.py\", \"/services/memory.py\", \"/services/legacy_sync.py\"]}",
+      "metadata": {
+        "success": true,
+        "latency": 198,
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "ad4fc7d2-ba70-40cf-b5cb-e47b4b32f4e9",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:48.667228+00:00",
+      "type": "tool_result",
+      "parentId": "dd4ada6b-826f-4d93-8fca-2c406558b498",
+      "content": "{\"monthly_estimate\": \"$412\", \"high_availability\": true}",
+      "metadata": {
+        "success": true,
+        "latency": 604,
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "833612ea-ff3b-47c9-9e77-22d8276bcb19",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:49.573079+00:00",
+      "type": "memory",
+      "parentId": "0e5b4a9f-e419-47ed-879e-7c0358ef6dee",
+      "content": "Retrieving previous deployment guidelines",
+      "metadata": {
+        "source": "pinecone",
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "bf72f3ee-acc6-46b8-9deb-1c58014e9ea8",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:50.178131+00:00",
+      "type": "thought",
+      "parentId": "833612ea-ff3b-47c9-9e77-22d8276bcb19",
+      "content": "Recovered engineering rule: all new infrastructure must support async failover.",
+      "metadata": {
+        "confidence": 1.0,
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "08d1c669-3381-4e0f-8d91-292b54bf27ed",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:50.685203+00:00",
+      "type": "thought",
+      "parentId": "4f7afb79-87e8-4d26-a027-0998b1246191",
+      "content": "Synthesizing architecture: Redis Cluster for hot memory, pgvector for semantic recall, FastAPI async services for orchestration.",
+      "metadata": {
+        "confidence": 0.93,
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "5d5a210e-8e93-44d8-88ff-0043116f5e59",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:51.489717+00:00",
+      "type": "hallucination",
+      "parentId": "ee84a570-47c1-42d1-8439-a393dad9c3c1",
+      "content": "Warning: Proposed Redis eviction strategy may silently drop semantic embeddings during memory pressure.",
+      "metadata": {
+        "severity": "high",
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "38d21b1a-5485-41a9-8e8e-be4fad6bf0ea",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:52.195339+00:00",
+      "type": "thought",
+      "parentId": "08d1c669-3381-4e0f-8d91-292b54bf27ed",
+      "content": "Revising memory architecture: embeddings moved to persistent pgvector storage while Redis retains only hot inference context.",
+      "metadata": {
+        "selfCorrection": true,
+        "confidence": 0.97,
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "3dd107a3-6efd-4e8c-a38c-a16ab17a5866",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:53.096613+00:00",
+      "type": "tool_call",
+      "parentId": "38d21b1a-5485-41a9-8e8e-be4fad6bf0ea",
+      "content": "Calling write_file",
+      "metadata": {
+        "toolName": "write_file",
+        "args": {
+          "filepath": "/services/async_memory_service.py",
+          "lines": 128
+        },
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "fdd8af06-bffc-401d-9a4b-6d87d79a865e",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:53.602748+00:00",
+      "type": "tool_result",
+      "parentId": "3dd107a3-6efd-4e8c-a38c-a16ab17a5866",
+      "content": "{\"status\": \"success\", \"bytes_written\": 7420}",
+      "metadata": {
+        "success": true,
+        "latency": 11,
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "9dd92ac1-774d-4e0f-944c-719dd1b3b77e",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:54.308260+00:00",
+      "type": "thought",
+      "parentId": "0e5b4a9f-e419-47ed-879e-7c0358ef6dee",
+      "content": "Reviewer agent validating deployment reliability and rollback strategy.",
+      "metadata": {
+        "agent": "ReviewerGPT",
+        "confidence": 0.91,
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "7a7a01f6-faa1-4c03-b0a2-4478d6967fe7",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:55.012612+00:00",
+      "type": "tool_call",
+      "parentId": "9dd92ac1-774d-4e0f-944c-719dd1b3b77e",
+      "content": "Calling deployment_validator",
+      "metadata": {
+        "toolName": "deployment_validator",
+        "args": {
+          "strategy": "rolling-update",
+          "rollback": true
+        },
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "3a2777b7-fa34-48a2-b350-3bca66ebbdf1",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:55.619321+00:00",
+      "type": "tool_result",
+      "parentId": "7a7a01f6-faa1-4c03-b0a2-4478d6967fe7",
+      "content": "{\"status\": \"approved\", \"rollback_window\": \"5 minutes\"}",
+      "metadata": {
+        "success": true,
+        "latency": 144,
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:56.424794+00:00",
+      "type": "thought",
+      "parentId": "0e5b4a9f-e419-47ed-879e-7c0358ef6dee",
+      "content": "Architecture finalized. Streaming deployment summary.",
+      "metadata": {
+        "confidence": 0.99,
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "06c8408e-1e05-493c-ae98-35a9ed19533c",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:56.931712+00:00",
       "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": "I",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": "\nSuccessfully",
       "metadata": {
         "agentName": "ArchitectGPT",
         "sessionName": "demo-session"
       }
     },
     {
-      "id": "6cd669c0-1c1c-49a5-948f-7393e384f4aa",
+      "id": "0dec13a8-9925-4ffa-867c-f68bc38cb36e",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.455082+00:00",
+      "timestamp": "2026-05-20T09:39:56.968814+00:00",
       "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " have",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " designed",
       "metadata": {
         "agentName": "ArchitectGPT",
         "sessionName": "demo-session"
       }
     },
     {
-      "id": "e918114f-134a-4d99-8a1f-f113534fe6fd",
+      "id": "c3425b58-6ef2-45c0-b252-e4f6688da58b",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.501436+00:00",
+      "timestamp": "2026-05-20T09:39:57.005651+00:00",
       "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " implemented",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " and",
       "metadata": {
         "agentName": "ArchitectGPT",
         "sessionName": "demo-session"
       }
     },
     {
-      "id": "3eb3e5c0-a66b-4e42-a5ee-7d020b4565a3",
+      "id": "a0377efd-1994-432e-8f21-74d048320e13",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.547663+00:00",
+      "timestamp": "2026-05-20T09:39:57.041690+00:00",
       "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " validated",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "d71a8961-4e60-43a0-9454-f638437374f2",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.074732+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
       "content": " the",
       "metadata": {
         "agentName": "ArchitectGPT",
@@ -250,23 +342,83 @@
       }
     },
     {
-      "id": "f4bb3c76-dc3d-42e5-8dc4-2155cabe8c7f",
+      "id": "2ca975fc-f595-45e7-bb50-d8609bdb7874",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.591779+00:00",
+      "timestamp": "2026-05-20T09:39:57.108082+00:00",
       "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " scalable",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " distributed",
       "metadata": {
         "agentName": "ArchitectGPT",
         "sessionName": "demo-session"
       }
     },
     {
-      "id": "f7f5865c-fb82-47cd-932f-df4f067fa5c5",
+      "id": "bc4f0783-5919-468f-a663-bddca46dc92e",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.636992+00:00",
+      "timestamp": "2026-05-20T09:39:57.143339+00:00",
       "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " AI",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "ba006ae2-8189-48d0-bec1-63e5bf44e543",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.174351+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " memory",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "0d3451d7-f040-43ea-8d22-eb115cc855f2",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.210273+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " system.\n\nKey",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "73d2f9d1-7cf5-4b45-8896-b353cacb08fc",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.243514+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " architectural",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "d07ca937-195b-4f61-b1de-30f772fe0925",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.279349+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " decisions:\n-",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "9a9e4642-f53c-49f2-aff5-65487c47a804",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.318340+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
       "content": " Redis",
       "metadata": {
         "agentName": "ArchitectGPT",
@@ -274,347 +426,35 @@
       }
     },
     {
-      "id": "489bdfd5-4727-4e04-bd4e-0337da09474c",
+      "id": "dbe535c5-9c34-4af6-b966-01eb0f20090a",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.682125+00:00",
+      "timestamp": "2026-05-20T09:39:57.355639+00:00",
       "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " caching",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " Cluster",
       "metadata": {
         "agentName": "ArchitectGPT",
         "sessionName": "demo-session"
       }
     },
     {
-      "id": "b1ff8efc-bbed-4717-b9c2-800a4bebacb2",
+      "id": "bd0f83da-a134-47f2-8742-807900d55880",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.724822+00:00",
+      "timestamp": "2026-05-20T09:39:57.391070+00:00",
       "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " layer.\n\n",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " used",
       "metadata": {
         "agentName": "ArchitectGPT",
         "sessionName": "demo-session"
       }
     },
     {
-      "id": "ad3cb9cf-7abb-4ea6-b9f1-5c5cfe07b12d",
+      "id": "ad143285-8b72-4d2b-bdaa-3800646f3554",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.769790+00:00",
+      "timestamp": "2026-05-20T09:39:57.424754+00:00",
       "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": "**Key",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "caf146d3-d8ef-4081-8978-8fe244ce86e4",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.813944+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " Decisions:**\n",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "b6c08ebd-de6d-4872-b197-1d85b8c0de23",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.859641+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": "-",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "90ac3747-d43c-4b61-9ab2-4f3bf24ea8c9",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.903598+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " Migrated",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "4124d1a2-b891-4d90-8946-d18874dd5dfc",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.950318+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " to",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "a43e952f-c7ea-450c-8ff8-a420ede4ed75",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:25.993266+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " `redis.asyncio.cluster`\n",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "a649fd98-c550-44f7-a024-8bef2b29e521",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.037286+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": "-",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "927f5621-e93c-4a09-9065-0c1304fe4151",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.082253+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " Maintained",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "4122d721-e998-4db5-a1f7-97f61d66055e",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.127016+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " legacy",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "cc712373-f08d-420d-addd-6d67be482650",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.170129+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " `pickle`",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "7e22d14e-0d56-4d1a-adbf-0a82b1d82bc2",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.211969+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " compatibility",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "52839b70-ac0d-4982-aadc-6d17e4fca105",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.253922+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " to",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "20edc25e-2f08-4cfc-b0ce-5968052def88",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.299395+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " prevent",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "e9337098-639f-4e2c-b563-b7f9fc2f04c6",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.342645+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " downtime\n",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "b51daff3-4eab-42f3-83e2-b324ea8c1110",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.387176+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": "-",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "302ff356-b63b-45df-bbeb-ccf19d13d7f8",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.427989+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " Setup",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "549990f0-5499-40e6-8da0-ab6356353237",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.473577+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " connection",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "b806210c-44b5-4941-812a-364a69c1fd96",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.516281+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " pool",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "ed1e9960-984d-4a5b-92c9-072990178999",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.558460+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " with",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "48f97c90-1baa-46ee-a08d-2e780672e43a",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.604037+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " 100",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "dcc57914-caa7-41fc-b9eb-ee7a09113300",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.651350+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " max",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "240f4c6f-08b0-4aff-8249-7c81c03be441",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.696142+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " connections\n\n",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "e6c850ec-aac4-4ca6-888b-46320d9564f3",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.743323+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": "The",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "5195bb78-218e-4ec2-b011-1c19356f5f38",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.791062+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " code",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "724888a8-43e3-4bf6-9457-30c8ea8e9cd6",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.837922+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " is",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "5399118b-9992-4743-b475-a84e2c98636e",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.880962+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " ready",
-      "metadata": {
-        "agentName": "ArchitectGPT",
-        "sessionName": "demo-session"
-      }
-    },
-    {
-      "id": "5d9b84a5-a177-40b4-a6c7-d0d1aecd2921",
-      "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.928136+00:00",
-      "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
       "content": " for",
       "metadata": {
         "agentName": "ArchitectGPT",
@@ -622,48 +462,396 @@
       }
     },
     {
-      "id": "c740eceb-ec80-47e2-90a1-4e7a29d4d8d3",
+      "id": "63dc6302-ac30-4cdc-bb68-de4a2e72cc36",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:26.972777+00:00",
+      "timestamp": "2026-05-20T09:39:57.461047+00:00",
       "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " review",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " hot",
       "metadata": {
         "agentName": "ArchitectGPT",
         "sessionName": "demo-session"
       }
     },
     {
-      "id": "2e9370ec-6c72-418a-a139-d0f73131d1ef",
+      "id": "848ee78c-42ba-494f-a89e-45fdf871e440",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:27.019077+00:00",
+      "timestamp": "2026-05-20T09:39:57.497073+00:00",
       "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " in",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " inference",
       "metadata": {
         "agentName": "ArchitectGPT",
         "sessionName": "demo-session"
       }
     },
     {
-      "id": "50a6fef8-84f8-4098-9e27-f1a8df2f9cd6",
+      "id": "683a4767-1a3f-4ed7-85a5-ae43c64ad285",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:27.067078+00:00",
+      "timestamp": "2026-05-20T09:39:57.531022+00:00",
       "type": "token",
-      "parentId": "236810f2-c7bd-474a-92af-3410aef497b7",
-      "content": " `/utils/async_cache.py`.",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " context\n-",
       "metadata": {
         "agentName": "ArchitectGPT",
         "sessionName": "demo-session"
       }
     },
     {
-      "id": "aeca6c72-018f-4b9f-b427-c227f2dce73d",
+      "id": "e5cfdbb5-9325-4ca4-9adf-012d24b4ca6e",
       "sessionId": "demo-session",
-      "timestamp": "2026-05-17T17:15:27.418063+00:00",
+      "timestamp": "2026-05-20T09:39:57.564645+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " pgvector",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "ef50ef42-0e7a-4765-be86-38b5247f2e2d",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.601025+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " used",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "9cd6b063-b6b5-44c3-9d56-52086a5420f6",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.634080+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " for",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "441ba774-ae4a-4693-a14b-321f46d33d3e",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.671500+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " long-term",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "6c79359b-095a-48ec-a7ca-f85c2a4349e0",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.705232+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " semantic",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "8adafdd9-ac59-4ea0-9664-977e2efea1c8",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.738721+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " memory\n-",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "9720850e-fd33-420d-9662-f53931695db1",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.775632+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " Full",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "5fabdbac-b3fb-4277-9af1-9410df2dbe2d",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.811412+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " async",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "4b77afbe-202f-4c45-8e34-73884fa00217",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.847991+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " FastAPI",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "ed3a2cf0-c2d3-478e-9520-ce9e3e2aa9e2",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.885109+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " orchestration",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "26eeb1bc-d476-40aa-8c1d-7bdc3107c9e2",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.922648+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " layer\n-",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "5395d709-a83e-4123-8ad8-12d88aeb276c",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.960096+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " Multi-region",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "5ed0e300-f56a-4954-86f1-0e76c7112fa1",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:57.996795+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " failover",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "917b6d6c-a0b8-4b51-9f4d-78be052fea84",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.032146+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " enabled\n-",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "61520036-3c6c-439b-9549-db09f910cc2f",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.068763+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " Rolling",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "9d6488b7-b14f-4aab-9d22-ce7872f0e17a",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.105070+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " deployment",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "0debc18f-c754-4bdc-9047-71b140ce7063",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.138232+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " validation",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "237dd3cf-d213-4e0b-9c40-7315a267727b",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.173916+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " approved\n-",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "ac9528a8-c62b-4b27-8dcb-e07f5449e7ce",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.209604+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " Legacy",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "ce290cd1-71e6-4c1a-9b62-b4e35be28cfc",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.245343+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " sync",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "56d147f1-e39e-4c61-97d7-0b7b416d2499",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.281057+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " services",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "9a40ff60-d502-4314-b337-efa1de7315a3",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.313706+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " isolated",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "e267f4dd-3613-4067-9054-15f1c35a1fa1",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.351512+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " safely\n\nThe",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "94e2dc14-b805-4fb4-bfd7-18c2583ab3b0",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.385832+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " system",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "5f5279b1-79ec-4ce0-ab93-6007b41ef2bb",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.422514+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " is",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "e0cc845b-507d-4963-b352-7d0a3b57bc96",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.459199+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " now",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "a753ca6b-f8ef-490b-a156-c9223ac567c6",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.497287+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " production-ready",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "d834f827-ddf5-452d-a58e-056f822c2a48",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.535691+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " for",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "6c06100c-8432-4e9d-a5fa-6c08d073c557",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:58.573827+00:00",
+      "type": "token",
+      "parentId": "7932320c-ed82-4b03-9865-65bcdc7bbaaa",
+      "content": " deployment.\n",
+      "metadata": {
+        "agentName": "ArchitectGPT",
+        "sessionName": "demo-session"
+      }
+    },
+    {
+      "id": "6067807f-fecc-4b9c-9017-32ecad480c92",
+      "sessionId": "demo-session",
+      "timestamp": "2026-05-20T09:39:59.111330+00:00",
       "type": "system",
-      "parentId": "357292c1-849a-4b81-b7dc-4ffd0e5ae2e9",
-      "content": "Workflow terminated normally. 0 errors.",
+      "parentId": "0e5b4a9f-e419-47ed-879e-7c0358ef6dee",
+      "content": "Workflow terminated normally. 0 critical errors detected.",
       "metadata": {
         "agentName": "ArchitectGPT",
         "sessionName": "demo-session"

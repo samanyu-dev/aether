@@ -58,6 +58,15 @@ class SessionDetail(BaseModel):
 class BatchEvents(BaseModel):
     events: List[AetherEvent]
 
+class BreakpointConfig(BaseModel):
+    criteria: str
+    enabled: bool
+
+class BreakpointEvaluate(BaseModel):
+    type: str
+    content: Any
+    metadata: Optional[Dict[str, Any]] = None
+
 # ─── In-Memory Store ─────────────────────────────────────────────────────────
 
 class CognitionStore:
@@ -67,9 +76,11 @@ class CognitionStore:
     def __init__(self):
         self.sessions: Dict[str, SessionInfo] = {}
         self.events: Dict[str, List[AetherEvent]] = defaultdict(list)
-        self._lock = asyncio.Lock()
+        self._lock = None
 
     async def record_event(self, event: AetherEvent) -> AetherEvent:
+        if self._lock is None:
+            self._lock = asyncio.Lock()
         async with self._lock:
             sid = event.sessionId
             # Auto-create session if not exists
@@ -213,6 +224,88 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+# ─── Breakpoint Manager ──────────────────────────────────────────────────────
+from collections import defaultdict
+from typing import Set
+
+class BreakpointManager:
+    def __init__(self):
+        self.breakpoints: Dict[str, Set[str]] = defaultdict(set)
+        self.global_breakpoints: Set[str] = set()
+        self.active_halts: Dict[str, asyncio.Event] = {}
+        self.mutated_payloads: Dict[str, Any] = {}
+        self.statuses: Dict[str, str] = {}
+
+    def enable_breakpoint(self, session_id: str, criteria: str):
+        self.breakpoints[session_id].add(criteria)
+
+    def disable_breakpoint(self, session_id: str, criteria: str):
+        if criteria in self.breakpoints[session_id]:
+            self.breakpoints[session_id].remove(criteria)
+
+    def should_pause(self, session_id: str, event_type: str, metadata: Optional[Dict] = None) -> bool:
+        if event_type in self.global_breakpoints:
+            return True
+        if event_type == "tool_call" and metadata and metadata.get("toolName") in self.global_breakpoints:
+            return True
+        if event_type in self.breakpoints[session_id]:
+            return True
+        if event_type == "tool_call" and metadata and metadata.get("toolName") in self.breakpoints[session_id]:
+            return True
+        return False
+
+    async def hold(self, session_id: str, event_id: str, payload: dict) -> dict:
+        event = asyncio.Event()
+        self.active_halts[event_id] = event
+        self.statuses[event_id] = "pending"
+        self.mutated_payloads[event_id] = payload
+
+        # Broadcast to session subscribers that a breakpoint was hit
+        await manager.broadcast_to_session(session_id, AetherEvent(
+            id=event_id,
+            sessionId=session_id,
+            type="breakpoint_hit",
+            content=payload.get("content", ""),
+            metadata={
+                **(payload.get("metadata", {})),
+                "breakpoint_status": "pending",
+                "node_id": event_id
+            }
+        ))
+        
+        await manager.broadcast_global({
+            "type": "breakpoint_hit",
+            "sessionId": session_id,
+            "nodeId": event_id,
+            "payload": payload
+        })
+
+        try: 
+            await event.wait()
+        finally:
+            self.active_halts.pop(event_id, None)
+
+        status = self.statuses.get(event_id, "resumed")
+        mutated = self.mutated_payloads.get(event_id, payload)
+        
+        return {
+            "status": status,
+            "payload": mutated
+        }
+
+    def resume(self, event_id: str, mutated_payload: dict):
+        if event_id in self.active_halts:
+            self.mutated_payloads[event_id] = mutated_payload
+            self.statuses[event_id] = "resumed"
+            self.active_halts[event_id].set()
+
+    def reject(self, event_id: str):
+        if event_id in self.active_halts:
+            self.statuses[event_id] = "rejected"
+            self.active_halts[event_id].set()
+
+breakpoint_manager = BreakpointManager()
+
 # ─── REST Endpoints ──────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -228,6 +321,71 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "healthy", "uptime": time.time()}
+
+# ── Breakpoints ──
+
+@app.post("/sessions/{session_id}/breakpoints/configure")
+async def configure_breakpoint(session_id: str, config: BreakpointConfig):
+    if config.enabled:
+        breakpoint_manager.enable_breakpoint(session_id, config.criteria)
+    else:
+        breakpoint_manager.disable_breakpoint(session_id, config.criteria)
+    return {"status": "configured", "breakpoints": list(breakpoint_manager.breakpoints[session_id])}
+
+@app.post("/breakpoints/global-configure")
+async def configure_global_breakpoints(config: BreakpointConfig):
+    if config.enabled:
+        breakpoint_manager.global_breakpoints.add(config.criteria)
+    else:
+        breakpoint_manager.global_breakpoints.discard(config.criteria)
+    return {"status": "configured", "global_breakpoints": list(breakpoint_manager.global_breakpoints)}
+
+@app.post("/sessions/{session_id}/breakpoints/{node_id}/evaluate")
+async def evaluate_breakpoint(session_id: str, node_id: str, eval_data: BreakpointEvaluate):
+    if breakpoint_manager.should_pause(session_id, eval_data.type, eval_data.metadata):
+        return {"action": "pause", "nodeId": node_id}
+    return {"action": "continue", "nodeId": node_id}
+
+@app.post("/sessions/{session_id}/breakpoints/{node_id}/hold")
+async def hold_breakpoint(session_id: str, node_id: str, payload: dict):
+    result = await breakpoint_manager.hold(session_id, node_id, payload)
+    return result
+
+@app.post("/sessions/{session_id}/breakpoints/{node_id}/resume")
+async def resume_breakpoint(session_id: str, node_id: str, payload: dict):
+    breakpoint_manager.resume(node_id, payload)
+    await manager.broadcast_to_session(session_id, AetherEvent(
+        id=node_id,
+        sessionId=session_id,
+        type="breakpoint_resumed",
+        content=payload.get("content", ""),
+        metadata={
+            **(payload.get("metadata", {})),
+            "breakpoint_status": "resumed"
+        }
+    ))
+    return {"status": "resumed", "nodeId": node_id}
+
+@app.post("/sessions/{session_id}/breakpoints/{node_id}/reject")
+async def reject_breakpoint(session_id: str, node_id: str):
+    breakpoint_manager.reject(node_id)
+    await manager.broadcast_to_session(session_id, AetherEvent(
+        id=node_id,
+        sessionId=session_id,
+        type="breakpoint_rejected",
+        content="Execution rejected by human operator",
+        metadata={"breakpoint_status": "rejected"}
+    ))
+    return {"status": "rejected", "nodeId": node_id}
+
+@app.get("/breakpoints/{node_id}/status")
+async def get_breakpoint_status(node_id: str):
+    is_active = node_id in breakpoint_manager.active_halts
+    return {
+        "nodeId": node_id,
+        "active": is_active,
+        "status": breakpoint_manager.statuses.get(node_id, "none")
+    }
 
 # ── Events ──
 

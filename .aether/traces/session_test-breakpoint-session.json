@@ -1,0 +1,37 @@
+{
+  "session_id": "test-breakpoint-session",
+  "agent_name": "qa-agent",
+  "timestamp": "2026-05-20T11:07:13.795151+00:00",
+  "event_count": 2,
+  "events": [
+    {
+      "id": "023384dc-99b3-4253-ac55-d0c7c81e9985",
+      "sessionId": "test-breakpoint-session",
+      "timestamp": "2026-05-20T11:07:10.775585+00:00",
+      "type": "thought",
+      "parentId": null,
+      "content": "Planning cache analysis query.",
+      "metadata": {
+        "agentName": "qa-agent",
+        "sessionName": "test-breakpoint-session"
+      }
+    },
+    {
+      "id": "af6fea89-bf5e-417e-a0eb-0218469d8fe0",
+      "sessionId": "test-breakpoint-session",
+      "timestamp": "2026-05-20T11:07:10.779056+00:00",
+      "type": "tool_call",
+      "parentId": null,
+      "content": "Calling web_search",
+      "metadata": {
+        "toolName": "web_search",
+        "args": {
+          "query": "superconducting materials room temperature",
+          "k": 10
+        },
+        "agentName": "qa-agent",
+        "sessionName": "test-breakpoint-session"
+      }
+    }
+  ]
+}

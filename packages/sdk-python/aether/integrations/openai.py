@@ -84,3 +84,6 @@ def trace_openai(client: Any, tracer: Any) -> Any:
 
     client.chat.completions.create = traced_create
     return client
+
+instrument_openai = trace_openai
+

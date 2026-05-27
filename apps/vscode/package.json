@@ -4,6 +4,16 @@
   "description": "Visual cognition replay and observability for AI agents inside VSCode.",
   "version": "0.1.0",
   "publisher": "aether",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Samanyu-dev/Aether.git"
+  },
+  "files": [
+    "dist/**/*.js",
+    "media/**/*",
+    "README.md",
+    "LICENSE"
+  ],
   "engines": {
     "vscode": "^1.75.0"
   },
@@ -15,7 +25,8 @@
   ],
   "activationEvents": [
     "onView:aether-traces",
-    "onCommand:aether.refreshExplorer"
+    "onCommand:aether.refreshExplorer",
+    "onCommand:aether.compareTraces"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -32,7 +43,8 @@
       "aether-observe": [
         {
           "id": "aether-traces",
-          "name": "Local Cognition Traces"
+          "name": "Aether Observability Platform",
+          "type": "webview"
         }
       ]
     },
@@ -45,6 +57,10 @@
       {
         "command": "aether.replayTrace",
         "title": "Open Cognition Replay"
+      },
+      {
+        "command": "aether.compareTraces",
+        "title": "Compare Cognition Traces"
       }
     ],
     "menus": {

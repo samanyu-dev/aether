@@ -48,6 +48,68 @@ class AetherSession:
         self._flush_thread = threading.Thread(target=self._auto_flush, daemon=True)
         self._flush_thread.start()
 
+    def get_event(self, event_id: str) -> Optional[dict]:
+        with self._buffer_lock:
+            for e in self._all_events:
+                if e["id"] == event_id:
+                    return e
+        return None
+
+    def _handle_breakpoint(self, event: dict) -> dict:
+        """Checks if a breakpoint should trigger, holds the thread, and mutates event content."""
+        if not getattr(self.sdk, "breakpoints_enabled", False):
+            return event
+
+        if not self.sdk.endpoint or ("localhost" not in self.sdk.endpoint and "127.0.0.1" not in self.sdk.endpoint):
+            return event
+
+        if event["type"] not in ("thought", "tool_call"):
+            return event
+
+        node_id = event["id"]
+        try:
+            # 1. Ask the backend if a breakpoint is triggered for this event type/metadata
+            eval_payload = {
+                "type": event["type"],
+                "content": event["content"],
+                "metadata": event.get("metadata", {})
+            }
+            eval_url = f"{self.sdk.endpoint}/sessions/{self.session_id}/breakpoints/{node_id}/evaluate"
+            res = requests.post(eval_url, json=eval_payload, timeout=2)
+            if res.status_code == 200:
+                action_data = res.json()
+                if action_data.get("action") == "action_pause" or action_data.get("action") == "pause":
+                    print(f"\n🌌 [Aether Debugger] Reasoning Breakpoint hit at '{event['type']}' node [{node_id}].")
+                    print(f"   Paused details: {event['content']}")
+                    if event["type"] == "tool_call":
+                        print(f"   Tool Arguments: {event.get('metadata', {}).get('args')}")
+                    print("   Waiting for operator review inside VS Code / Web Replay Console...")
+
+                    # 2. Call hold (blocks synchronously until operator resumes or rejects)
+                    hold_url = f"{self.sdk.endpoint}/sessions/{self.session_id}/breakpoints/{node_id}/hold"
+                    hold_res = requests.post(hold_url, json=event, timeout=120)  # 2 minutes operator timeout
+                    
+                    if hold_res.status_code == 200:
+                        hold_data = hold_res.json()
+                        if hold_data.get("status") == "rejected":
+                            print("❌ [Aether Debugger] Execution REJECTED by human operator.")
+                            raise RuntimeError(f"Execution rejected by operator at node {node_id}")
+                        elif hold_data.get("status") == "resumed":
+                            mutated_data = hold_data.get("payload", {})
+                            mutated_event = event.copy()
+                            for k, v in mutated_data.items():
+                                if k == "metadata" and isinstance(v, dict) and "metadata" in mutated_event:
+                                    mutated_event["metadata"] = mutated_event["metadata"].copy()
+                                    mutated_event["metadata"].update(v)
+                                else:
+                                    mutated_event[k] = v
+                            print("▶ [Aether Debugger] Execution RESUMED with payload updates.")
+                            return mutated_event
+        except requests.exceptions.RequestException:
+            pass
+        
+        return event
+
     def _make_event(
         self,
         event_type: str,
@@ -160,6 +222,7 @@ class AetherSession:
         if confidence is not None:
             meta["confidence"] = confidence
         event = self._make_event("thought", content, parent_id, meta)
+        event = self._handle_breakpoint(event)
         return self._emit(event)
 
     def tool_call(
@@ -172,8 +235,12 @@ class AetherSession:
             "tool_call",
             f"Calling {tool_name}",
             parent_id,
-            {"toolName": tool_name, "args": args or {}},
+            {"toolName": tool_name, "args": dict(args) if args else {}},
         )
+        event = self._handle_breakpoint(event)
+        if args is not None and "metadata" in event and "args" in event["metadata"]:
+            args.clear()
+            args.update(event["metadata"]["args"])
         return self._emit(event)
 
     def tool_result(
@@ -252,11 +319,13 @@ class AgentTracer:
         endpoint: Optional[str] = None,
         local: bool = True,
         verbose: bool = True,
+        breakpoints_enabled: bool = True,
     ):
         self.project = project
         self.endpoint = endpoint or os.getenv("AETHER_ENDPOINT", "http://localhost:8000")
         self.local = local
         self.verbose = verbose
+        self.breakpoints_enabled = breakpoints_enabled
 
     def start_session(self, name: str, agent_name: str = "", session_id: str = None) -> AetherSession:
         if not session_id:

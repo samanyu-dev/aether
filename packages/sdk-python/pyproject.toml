@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aether-observe"
-version = "0.2.0a1"
+version = "0.1.0b1"
 description = "Lightweight realtime cognition replay SDK for AI agents."
 readme = "README.md"
 requires-python = ">=3.9"
@@ -23,3 +23,6 @@ aether = "aether.cli:main"
 
 [tool.setuptools]
 include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["aether*"]
