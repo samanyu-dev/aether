@@ -1,0 +1,52 @@
+{
+  "session_id": "default-local-sandbox-agent-d22780b8",
+  "agent_name": "sandbox-agent",
+  "timestamp": "2026-05-27T17:24:50.764358+00:00",
+  "event_count": 3,
+  "events": [
+    {
+      "id": "2d95893c-8e33-43d5-b882-02781e9560da",
+      "sessionId": "default-local-sandbox-agent-d22780b8",
+      "timestamp": "2026-05-27T17:24:40.345200+00:00",
+      "type": "thought",
+      "parentId": null,
+      "content": "Formulating execution options",
+      "metadata": {
+        "agentName": "sandbox-agent",
+        "sessionName": "default-local-sandbox-agent-d22780b8"
+      }
+    },
+    {
+      "id": "3906e672-3db9-4996-af6d-b6d152dc693c",
+      "sessionId": "default-local-sandbox-agent-d22780b8",
+      "timestamp": "2026-05-27T17:24:40.361523+00:00",
+      "type": "tool_call",
+      "parentId": null,
+      "content": "Calling get_weather",
+      "metadata": {
+        "toolName": "get_weather",
+        "args": {
+          "loc": "San Francisco"
+        },
+        "agentName": "sandbox-agent",
+        "sessionName": "default-local-sandbox-agent-d22780b8"
+      }
+    },
+    {
+      "id": "00c51544-c1e4-405a-9a40-07f634889e30",
+      "sessionId": "default-local-sandbox-agent-d22780b8",
+      "timestamp": "2026-05-27T17:24:40.363260+00:00",
+      "type": "tool_call",
+      "parentId": null,
+      "content": "Calling dangerous_exec",
+      "metadata": {
+        "toolName": "dangerous_exec",
+        "args": {
+          "cmd": "rm -rf /"
+        },
+        "agentName": "sandbox-agent",
+        "sessionName": "default-local-sandbox-agent-d22780b8"
+      }
+    }
+  ]
+}

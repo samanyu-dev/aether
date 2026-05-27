@@ -13,7 +13,10 @@ class AetherCrewAICallbackHandler(BaseCallbackHandler):
     A custom callback handler for CrewAI execution loops. 
     Traces individual Agent thought structures, tool calls, results, and overall crew missions.
     """
-    def __init__(self, tracer: Any, crew_name: str = "CrewAI-Mission"):
+    def __init__(self, tracer: Optional[Any] = None, crew_name: str = "CrewAI-Mission"):
+        if tracer is None:
+            from aether import get_global_tracer
+            tracer = get_global_tracer()
         self.tracer = tracer
         self.crew_name = crew_name
         self.session = None

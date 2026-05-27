@@ -2,11 +2,15 @@ import time
 from typing import Any, Dict, Optional
 from datetime import datetime, timezone
 
-def trace_openai(client: Any, tracer: Any) -> Any:
+def trace_openai(client: Any, tracer: Optional[Any] = None) -> Any:
     """
     Wraps an OpenAI client's chat completions to automatically trace prompts, 
     tool calls, token latency, and completions into Aether.
     """
+    if tracer is None:
+        from aether import get_global_tracer
+        tracer = get_global_tracer()
+
     original_create = client.chat.completions.create
 
     def traced_create(*args: Any, **kwargs: Dict[str, Any]) -> Any:

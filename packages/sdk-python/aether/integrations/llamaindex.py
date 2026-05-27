@@ -21,9 +21,12 @@ class AetherLlamaIndexCallbackHandler(BaseCallbackHandler):
     A custom callback handler for LlamaIndex index searches, document retrievals,
     embedding lookups, query sequences, and model cycles.
     """
-    def __init__(self, tracer: Any, agent_name: str = "LlamaIndex-Agent"):
+    def __init__(self, tracer: Optional[Any] = None, agent_name: str = "LlamaIndex-Agent"):
         if hasattr(super(), "__init__"):
             super().__init__(event_starts_to_ignore=[], event_ends_to_ignore=[])
+        if tracer is None:
+            from aether import get_global_tracer
+            tracer = get_global_tracer()
         self.tracer = tracer
         self.agent_name = agent_name
         self.session = None

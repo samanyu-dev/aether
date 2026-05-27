@@ -1,12 +1,16 @@
 import functools
 from typing import Any, Dict, List, Optional, Union
 
-def instrument_autogen(agent: Any, tracer: Any) -> Any:
+def instrument_autogen(agent: Any, tracer: Optional[Any] = None) -> Any:
     """
     Instruments a Microsoft AutoGen ConversableAgent instance.
     Intercepts its sending and receiving pipelines to record agent-to-agent
     cognitive conversations natively within Aether.
     """
+    if tracer is None:
+        from aether import get_global_tracer
+        tracer = get_global_tracer()
+
     original_send = agent.send
     original_receive = agent.receive
 

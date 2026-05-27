@@ -175,20 +175,16 @@ with tracer.session(session_id="agent-run-101", agent_name="SupportGPT") as sess
     )
 ```
 
-### 2. Auto-Tracing Frameworks
+### 2. Zero-Config Magical Auto-Tracing
 
-Automatically instrument the official OpenAI Client:
+Aether provides parameterless instrumentation. The SDK will automatically instantiate a thread-safe, local-first global tracer behind the scenes—no config hell, no databases, and zero setup nightmare:
 
 ```python
-from aether import AgentTracer
-from aether.integrations.openai import trace_openai
+from aether.integrations.openai import instrument_openai
 import openai
 
-tracer = AgentTracer(project="openai-agent")
-client = openai.OpenAI()
-
-# Hook the OpenAI client in 1 line
-trace_openai(client, tracer)
+# Magical 1-line parameterless setup
+client = instrument_openai(openai.OpenAI())
 ```
 
 ---

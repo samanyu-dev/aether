@@ -1,18 +1,11 @@
 """
 Aether Python SDK
 =================
-Instrument your AI agents with cinematic observability.
+Local-first cognition debugger for AI agents.
 
 Usage:
-    from aether import AgentTracer
-
-    tracer = AgentTracer(project="my-project")
-
-    with tracer.session("research-agent") as session:
-        session.thought("Analyzing user intent")
-        tool_id = session.tool_call("web_search", {"query": "latest AI research"})
-        session.tool_result(tool_id, {"results": 5})
-        session.stream_tokens(["Hello", " world"])
+    from aether.integrations.openai import instrument_openai
+    client = instrument_openai(OpenAI())
 """
 import requests
 import uuid
@@ -24,6 +17,33 @@ import os
 from datetime import datetime, timezone
 from typing import Any, Optional, Dict, List, Callable
 from contextlib import contextmanager
+
+
+class BreakpointContext:
+    """Provides details about the paused execution state to a breakpoint checker function."""
+    def __init__(self, event_type: str, content: Any, metadata: dict, session: "AetherSession"):
+        self.event_type = event_type
+        self.content = content
+        self.metadata = metadata or {}
+        self.session = session
+        
+        # Helpers for tool calls
+        self.tool_name = self.metadata.get("toolName", "")
+        self.args = self.metadata.get("args", {})
+
+
+# ── Global Default local-first tracer ──
+_global_tracer = None
+_global_tracer_lock = threading.Lock()
+
+def get_global_tracer() -> "AgentTracer":
+    global _global_tracer
+    if _global_tracer is None:
+        with _global_tracer_lock:
+            if _global_tracer is None:
+                _global_tracer = AgentTracer(project="default-local", local=True, verbose=False)
+    return _global_tracer
+
 
 
 class AetherSession:
@@ -60,15 +80,96 @@ class AetherSession:
         if not getattr(self.sdk, "breakpoints_enabled", False):
             return event
 
-        if not self.sdk.endpoint or ("localhost" not in self.sdk.endpoint and "127.0.0.1" not in self.sdk.endpoint):
+        if event["type"] not in ("thought", "tool_call"):
             return event
 
-        if event["type"] not in ("thought", "tool_call"):
+        ctx = BreakpointContext(event["type"], event["content"], event.get("metadata", {}), self)
+        
+        # 1. Evaluate SDK Local Programmatic Hooks first
+        local_triggered = False
+        if hasattr(self.sdk, "breakpoint_hooks"):
+            for hook in self.sdk.breakpoint_hooks:
+                matches = False
+                if hook["before"] == event["type"]:
+                    matches = True
+                elif hook["after"] == event["type"]:
+                    matches = True
+                
+                if matches:
+                    try:
+                        should_continue = hook["func"](ctx)
+                        if should_continue is False:
+                            local_triggered = True
+                            break
+                    except Exception as err:
+                        if getattr(self.sdk, "verbose", False):
+                            print(f"[Aether] Error evaluating breakpoint hook: {err}")
+
+        # 2. Local Triggered Breakpoint Interactive Prompt Loop
+        if local_triggered:
+            print("\n" + "🌌" + " [Aether Debugger] REASONING BREAKPOINT HIT!")
+            print("━" * 70)
+            print(f"   Event Type:  \033[93m{event['type'].upper()}\033[0m")
+            print(f"   Content:     {event['content']}")
+            if event["type"] == "tool_call":
+                print(f"   Tool Name:   \033[96m{ctx.tool_name}\033[0m")
+                print(f"   Arguments:   {json.dumps(ctx.args)}")
+            print("━" * 70)
+            
+            while True:
+                print("\nWhat would you like to do?")
+                print("  [c] Continue execution")
+                print("  [a] Abort execution (raises RuntimeError)")
+                print("  [e] Edit event payload/arguments")
+                print("  [p] Drop into interactive Pdb debugging shell")
+                try:
+                    choice = input("Debugger Selection: ").strip().lower()
+                except (IOError, KeyboardInterrupt):
+                    choice = "a"
+                
+                if choice == "c":
+                    print("▶ Resuming execution...")
+                    break
+                elif choice == "a":
+                    print("❌ Aborting execution...")
+                    raise RuntimeError(f"Execution aborted by debugger breakpoint at {event['type']} node.")
+                elif choice == "e":
+                    if event["type"] == "tool_call":
+                        print("Enter new JSON arguments (e.g. {\"query\": \"safe value\"}):")
+                        try:
+                            arg_input = input("New Args: ").strip()
+                            new_args = json.loads(arg_input)
+                            event["metadata"]["args"] = new_args
+                            print(f"✔ Tool arguments mutated to: {new_args}")
+                            break
+                        except Exception as err:
+                            print(f"❌ Invalid JSON format: {err}. Try again.")
+                    else:
+                        print("Enter new content string:")
+                        try:
+                            content_input = input("New Content: ").strip()
+                            event["content"] = content_input
+                            print(f"✔ Content mutated to: {content_input}")
+                            break
+                        except Exception as err:
+                            print(f"❌ Error updating content: {err}")
+                elif choice == "p":
+                    print("\n🌌 [Aether] Dropping into interactive Pdb debugger.")
+                    print("   - Type 'c' to resume execution.")
+                    print("   - Access 'ctx' or 'event' to inspect/change values.")
+                    import pdb
+                    pdb.set_trace()
+                    break
+                else:
+                    print("Invalid choice. Please enter c, a, e, or p.")
+            return event
+
+        # 3. Fallback to Visualizer Server evaluation
+        if not self.sdk.endpoint or ("localhost" not in self.sdk.endpoint and "127.0.0.1" not in self.sdk.endpoint):
             return event
 
         node_id = event["id"]
         try:
-            # 1. Ask the backend if a breakpoint is triggered for this event type/metadata
             eval_payload = {
                 "type": event["type"],
                 "content": event["content"],
@@ -85,9 +186,8 @@ class AetherSession:
                         print(f"   Tool Arguments: {event.get('metadata', {}).get('args')}")
                     print("   Waiting for operator review inside VS Code / Web Replay Console...")
 
-                    # 2. Call hold (blocks synchronously until operator resumes or rejects)
                     hold_url = f"{self.sdk.endpoint}/sessions/{self.session_id}/breakpoints/{node_id}/hold"
-                    hold_res = requests.post(hold_url, json=event, timeout=120)  # 2 minutes operator timeout
+                    hold_res = requests.post(hold_url, json=event, timeout=120)
                     
                     if hold_res.status_code == 200:
                         hold_data = hold_res.json()
@@ -326,6 +426,23 @@ class AgentTracer:
         self.local = local
         self.verbose = verbose
         self.breakpoints_enabled = breakpoints_enabled
+        self.breakpoint_hooks = []
+
+    def register_breakpoint_hook(self, func: Callable, before: Optional[str] = None, after: Optional[str] = None):
+        self.breakpoint_hooks.append({
+            "func": func,
+            "before": before,
+            "after": after
+        })
+
+    def breakpoint(self, before: Optional[str] = None, after: Optional[str] = None):
+        """
+        Decorator to register a custom reasoning breakpoint hook.
+        """
+        def decorator(func):
+            self.register_breakpoint_hook(func, before=before, after=after)
+            return func
+        return decorator
 
     def start_session(self, name: str, agent_name: str = "", session_id: str = None) -> AetherSession:
         if not session_id:

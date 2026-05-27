@@ -14,7 +14,10 @@ class AetherCallbackHandler(BaseCallbackHandler):
     A native LangChain Callback Handler that automatically instruments and streams
     LLM prompt reasoning, tool invocations, token typewriter completions, and errors to Aether.
     """
-    def __init__(self, tracer: Any, agent_name: str = "LangChain-Agent"):
+    def __init__(self, tracer: Optional[Any] = None, agent_name: str = "LangChain-Agent"):
+        if tracer is None:
+            from aether import get_global_tracer
+            tracer = get_global_tracer()
         self.tracer = tracer
         self.agent_name = agent_name
         self.session = None

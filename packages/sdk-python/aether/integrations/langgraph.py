@@ -10,7 +10,10 @@ class AetherLangGraphTracer(AetherCallbackHandler):
     existing standard callback triggers, while standardizing dynamic session
     naming and node properties for StateGraph steps.
     """
-    def __init__(self, tracer: Any, graph_name: str = "LangGraph-Workflow"):
+    def __init__(self, tracer: Optional[Any] = None, graph_name: str = "LangGraph-Workflow"):
+        if tracer is None:
+            from aether import get_global_tracer
+            tracer = get_global_tracer()
         super().__init__(tracer, agent_name=graph_name)
         self.graph_name = graph_name
 
