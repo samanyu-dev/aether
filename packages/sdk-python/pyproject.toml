@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aether-observe"
 version = "0.1.0b1"
-description = "Lightweight realtime cognition replay SDK for AI agents."
+description = "Local-first realtime cognition debugger for AI agents."
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
@@ -20,6 +20,11 @@ dependencies = [
 
 [project.scripts]
 aether = "aether.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Samanyu-dev/Aether"
+Documentation = "https://github.com/Samanyu-dev/Aether#readme"
+"Bug Tracker" = "https://github.com/Samanyu-dev/Aether/issues"
 
 [tool.setuptools]
 include-package-data = true

@@ -253,7 +253,7 @@ class AetherSidebarWebviewProvider implements vscode.WebviewViewProvider {
                 position: { x: 50 + idx * 220, y: 100 + (idx % 2) * 50 },
                 data: {
                     label: ev.type.toUpperCase(),
-                    description: ev.content || 'Observability node',
+                    description: ev.content || 'Cognition node',
                     confidence: typeof ev.confidence === 'number' ? ev.confidence : 1.0,
                     active: idx === 0,
                     completed: false

@@ -35,6 +35,12 @@ interface AetherState {
   // Comparison fields
   comparisonEvents: AetherEvent[] | null;
   comparisonMode: boolean;
+
+  // Visual Breakpoint & Forking fields
+  breakpointHit: boolean;
+  breakpointEvent: AetherEvent | null;
+  forkedBranch: boolean;
+  memoryInspectOpen: boolean;
   
   // Actions
   addEvent: (event: AetherEvent) => void;
@@ -48,6 +54,10 @@ interface AetherState {
   setSelectedEvent: (id: string | null) => void;
   loadReplay: (events: AetherEvent[]) => void;
   loadComparison: (baseline: AetherEvent[], experiment: AetherEvent[]) => void;
+  
+  setBreakpointHit: (hit: boolean, event?: AetherEvent | null) => void;
+  setMemoryInspectOpen: (open: boolean) => void;
+  triggerFork: () => void;
 }
 
 export const useAetherStore = create<AetherState>((set) => ({
@@ -64,6 +74,10 @@ export const useAetherStore = create<AetherState>((set) => ({
   activePathNodeIds: [],
   comparisonEvents: null,
   comparisonMode: false,
+  breakpointHit: false,
+  breakpointEvent: null,
+  forkedBranch: false,
+  memoryInspectOpen: false,
 
   setSelectedEvent: (id) => set({ selectedEventId: id }),
 
@@ -371,6 +385,56 @@ export const useAetherStore = create<AetherState>((set) => ({
     };
   }),
 
+  setBreakpointHit: (hit, event = null) => set({ breakpointHit: hit, breakpointEvent: event }),
+  setMemoryInspectOpen: (open) => set({ memoryInspectOpen: open }),
+  triggerFork: () => set((state) => {
+    if (state.breakpointEvent) {
+      const parentId = state.breakpointEvent.parentId;
+      const dangerousId = state.breakpointEvent.id;
+      
+      const correctionEvents: AetherEvent[] = [
+        {
+          id: "forked-thought",
+          sessionId: state.activeSession || "demo-session",
+          timestamp: new Date().toISOString(),
+          type: "thought",
+          parentId: parentId || undefined,
+          content: "Safety correction activated! Risk flagged. Wildcard deletion command rejected. Switching to safe file search and target delete.",
+          metadata: { confidence: 1.0, selfCorrection: true, agentName: "DevOpsGPT" }
+        },
+        {
+          id: "forked-tool",
+          sessionId: state.activeSession || "demo-session",
+          timestamp: new Date().toISOString(),
+          type: "tool_call",
+          parentId: "forked-thought",
+          content: "Executing targeted safe purge: find /var/log/nginx -name '*.log' -mtime +14 -delete",
+          metadata: { toolName: "bash_exec", command: "find /var/log/nginx -name '*.log' -mtime +14 -delete" }
+        },
+        {
+          id: "forked-result",
+          sessionId: state.activeSession || "demo-session",
+          timestamp: new Date().toISOString(),
+          type: "tool_result",
+          parentId: "forked-tool",
+          content: "Safe delete finished successfully. Disk space cleared, system health returned to nominal.",
+          metadata: { latency: 75, success: true }
+        }
+      ];
+
+      const filtered = state.events.filter(e => e.id !== dangerousId && e.parentId !== dangerousId);
+      
+      return {
+        events: [...filtered, ...correctionEvents],
+        forkedBranch: true,
+        breakpointHit: false,
+        breakpointEvent: null,
+        selectedEventId: "forked-result"
+      };
+    }
+    return state;
+  }),
+
   clearActiveEvents: () => set({ 
     events: [], 
     nodes: [], 
@@ -380,6 +444,10 @@ export const useAetherStore = create<AetherState>((set) => ({
     activeNodeId: null,
     activePathNodeIds: [],
     comparisonEvents: null,
-    comparisonMode: false
+    comparisonMode: false,
+    breakpointHit: false,
+    breakpointEvent: null,
+    forkedBranch: false,
+    memoryInspectOpen: false
   }),
 }));

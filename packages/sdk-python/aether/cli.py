@@ -335,7 +335,7 @@ def cmd_clean(args):
         except Exception:
             pass
             
-    print(f"\033[92m[Aether CLI] Successfully removed {total_files} local observability logs.\033[0m")
+    print(f"\033[92m[Aether CLI] Successfully removed {total_files} local cognition replay logs.\033[0m")
 
 def cmd_export(args):
     trace_files = glob(".aether/traces/*.json")
@@ -661,7 +661,7 @@ def cmd_diff(args):
     print("=" * (col_width * 2 + 7) + "\n")
 
 def main():
-    parser = argparse.ArgumentParser(description="Aether AI Observability Platform CLI")
+    parser = argparse.ArgumentParser(description="Aether Local-First AI Cognition Debugger CLI")
     subparsers = parser.add_subparsers(dest="command", help="CLI commands")
     
     # list command

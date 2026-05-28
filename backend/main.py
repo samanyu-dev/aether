@@ -17,7 +17,7 @@ import time
 
 app = FastAPI(
     title="Aether Cognition Engine",
-    description="Realtime AI observability and reasoning visualization backend",
+    description="Local-first AI cognition debugger and reasoning visualization backend",
     version="0.2.0",
 )
 

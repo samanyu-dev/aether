@@ -1,7 +1,7 @@
 {
   "name": "aether-vscode",
   "displayName": "Aether Cognition Replay",
-  "description": "Visual cognition replay and observability for AI agents inside VSCode.",
+  "description": "Visual cognition replay and interactive debugging for AI agents inside VSCode.",
   "version": "0.1.0",
   "publisher": "aether",
   "repository": {
@@ -43,7 +43,7 @@
       "aether-observe": [
         {
           "id": "aether-traces",
-          "name": "Aether Observability Platform",
+          "name": "Aether Cognition Debugger",
           "type": "webview"
         }
       ]

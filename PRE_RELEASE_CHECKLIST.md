@@ -1,4 +1,4 @@
-# 🌌 Aether Observability Platform — Pre-Release Verification Checklist
+# 🌌 Aether Cognition Debugger — Pre-Release Verification Checklist
 
 This pre-release verification checklist ensures that **Aether** remains stable, lightweight, type-safe, and fully production-ready before any open-source release, VSCode extension package, or Hugging Face Space deployment.
 
@@ -31,7 +31,7 @@ This pre-release verification checklist ensures that **Aether** remains stable, 
     3.  `hallucination_repair.json` (Hallucination detection + automatic correction)
 *   **Result:** JSON schema parse checks return **100% valid**.
 
-### 6. 🌐 Live Observability & UI Polish
+### 6. 🌐 Live Cognition Debugging & UI Polish
 *   **Replay Reset Fix:** Resolved a visual defect where hitting "Restart" inside an active session would incorrectly trigger the full-screen landing page cover. Changed render visibility from empty node lists to active session state presence.
 *   **Graph Detail Inspection:** Enabled interactive node detail toggling. Clicking on nodes dynamically slides in nested metadata, tool latency outputs, and token counts.
 
@@ -42,7 +42,7 @@ This pre-release verification checklist ensures that **Aether** remains stable, 
 To execute the local environment verification:
 
 ```bash
-# 1. Start the FastAPI observer backend
+# 1. Start the FastAPI debugger backend
 cd backend
 python3 -m uvicorn main:app --port 8000 --reload
 

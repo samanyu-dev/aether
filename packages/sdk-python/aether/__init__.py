@@ -90,12 +90,14 @@ class AetherSession:
         if hasattr(self.sdk, "breakpoint_hooks"):
             for hook in self.sdk.breakpoint_hooks:
                 matches = False
-                if hook["before"] == event["type"]:
+                if hook.get("before") == event["type"]:
                     matches = True
-                elif hook["after"] == event["type"]:
+                elif hook.get("after") == event["type"]:
                     matches = True
                 
                 if matches:
+                    if hook.get("condition") and not hook["condition"](ctx):
+                        continue
                     try:
                         should_continue = hook["func"](ctx)
                         if should_continue is False:
@@ -428,21 +430,35 @@ class AgentTracer:
         self.breakpoints_enabled = breakpoints_enabled
         self.breakpoint_hooks = []
 
-    def register_breakpoint_hook(self, func: Callable, before: Optional[str] = None, after: Optional[str] = None):
+    def register_breakpoint_hook(self, func: Callable, before: Optional[str] = None, after: Optional[str] = None, condition: Optional[Callable] = None):
         self.breakpoint_hooks.append({
             "func": func,
             "before": before,
-            "after": after
+            "after": after,
+            "condition": condition
         })
 
-    def breakpoint(self, before: Optional[str] = None, after: Optional[str] = None):
+    def breakpoint(self, when: Optional[str] = None, condition: Optional[Callable] = None, before: Optional[str] = None, after: Optional[str] = None):
         """
         Decorator to register a custom reasoning breakpoint hook.
         """
+        event_type = when or before or after
         def decorator(func):
-            self.register_breakpoint_hook(func, before=before, after=after)
+            self.register_breakpoint_hook(func, before=event_type, condition=condition)
             return func
         return decorator
+
+    @contextmanager
+    def guardrails(self):
+        """
+        Context manager to enable visual guardrail breakpoints automatically.
+        """
+        old_val = self.breakpoints_enabled
+        self.breakpoints_enabled = True
+        try:
+            yield self
+        finally:
+            self.breakpoints_enabled = old_val
 
     def start_session(self, name: str, agent_name: str = "", session_id: str = None) -> AetherSession:
         if not session_id:

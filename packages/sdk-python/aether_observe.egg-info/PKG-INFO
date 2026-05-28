@@ -1,7 +1,10 @@
 Metadata-Version: 2.4
 Name: aether-observe
-Version: 0.2.0a1
-Summary: Lightweight realtime cognition replay SDK for AI agents.
+Version: 0.1.0b1
+Summary: Local-first realtime cognition debugger for AI agents.
+Project-URL: Homepage, https://github.com/Samanyu-dev/Aether
+Project-URL: Documentation, https://github.com/Samanyu-dev/Aether#readme
+Project-URL: Bug Tracker, https://github.com/Samanyu-dev/Aether/issues
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent

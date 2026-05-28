@@ -20,11 +20,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://aether-observatory.vercel.app"),
-  title: "Aether 🌌 — Realtime AI Cognition Replay & Observability Platform",
+  title: "Aether 🌌 — Local-First AI Cognition Debugger & Visual Replay Workspace",
   description:
-    "Watch AI agents think in realtime. Inspect reasoning trees, replay cognition sessions, trace tools, and debug hallucinations in a cinematic observability platform.",
+    "Watch AI agents think in realtime. Inspect reasoning trees, replay cognition sessions, trace tools, and debug hallucinations in a local-first cognition debugger.",
   keywords: [
-    "AI observability",
+    "AI debugger",
     "agent debugging",
     "reasoning visualization",
     "LLM tracing",
@@ -32,9 +32,9 @@ export const metadata: Metadata = {
     "Aether AI",
   ],
   openGraph: {
-    title: "Aether 🌌 — Realtime AI Cognition Replay & Observability Platform",
+    title: "Aether 🌌 — Local-First AI Cognition Debugger & Visual Replay Workspace",
     description:
-      "Watch AI agents think in realtime. Inspect reasoning trees, replay cognition sessions, trace tools, and debug hallucinations in a cinematic observability platform.",
+      "Watch AI agents think in realtime. Inspect reasoning trees, replay cognition sessions, trace tools, and debug hallucinations in a local-first cognition debugger.",
     url: "https://aether-observatory.vercel.app",
     siteName: "Aether",
     images: [
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
         url: "/docs/assets/hero_hallucination.png",
         width: 1200,
         height: 630,
-        alt: "Aether AI Cognition Observatory Replay Screen",
+        alt: "Aether AI Cognition Debugger Replay Screen",
       },
     ],
     locale: "en_US",
@@ -50,9 +50,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Aether 🌌 — Realtime AI Cognition Replay & Observability Platform",
+    title: "Aether 🌌 — Local-First AI Cognition Debugger & Visual Replay Workspace",
     description:
-      "Watch AI agents think in realtime. Inspect reasoning trees, replay cognition sessions, trace tools, and debug hallucinations in a cinematic observability platform.",
+      "Watch AI agents think in realtime. Inspect reasoning trees, replay cognition sessions, trace tools, and debug hallucinations in a local-first cognition debugger.",
     images: ["/docs/assets/hero_hallucination.png"],
   },
 };

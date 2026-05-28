@@ -1,6 +1,6 @@
 # Aether VSCode Extension Prototype
 
-Visual cognition replay and observability debugger for AI agents inside VSCode.
+Visual cognition replay and interactive debugging for AI agents inside VSCode.
 
 ## Features
 

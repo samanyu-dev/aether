@@ -116,12 +116,74 @@ const ObservatoryInner = () => {
   const loadReplay = useAetherStore((s) => s.loadReplay);
   const setTimelinePosition = useAetherStore((s) => s.setTimelinePosition);
   const timelinePosition = useAetherStore((s) => s.timelinePosition);
+  const breakpointHit = useAetherStore((s) => s.breakpointHit);
+  const breakpointEvent = useAetherStore((s) => s.breakpointEvent);
+  const forkedBranch = useAetherStore((s) => s.forkedBranch);
+  const triggerFork = useAetherStore((s) => s.triggerFork);
+  const setBreakpointHit = useAetherStore((s) => s.setBreakpointHit);
+  const memoryInspectOpen = useAetherStore((s) => s.memoryInspectOpen);
+  const setMemoryInspectOpen = useAetherStore((s) => s.setMemoryInspectOpen);
   useAetherWebSocket(activeSession || "demo-session");
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [introActive, setIntroActive] = useState(false);
   const [endingActive, setEndingActive] = useState(false);
   const { setCenter } = useReactFlow();
+
+  const handleStepInto = () => {
+    const sEvents = events.filter(e => e.sessionId === (activeSession || "demo-session"));
+    const visible = sEvents.filter(e => e.type !== 'token');
+    const currentStep = Math.ceil(visible.length * timelinePosition);
+    const nextPos = Math.min(1, (currentStep + 1) / visible.length);
+    setTimelinePosition(nextPos);
+    computeGraph();
+    
+    // Check if the stepped-to node is a hallucination
+    const nextCount = Math.ceil(visible.length * nextPos);
+    const latestVisibleEvent = visible[nextCount - 1];
+    if (latestVisibleEvent && latestVisibleEvent.type === "hallucination" && !forkedBranch) {
+      setBreakpointHit(true, latestVisibleEvent);
+    } else {
+      setBreakpointHit(false, null);
+    }
+  };
+
+  const handleStepOver = () => {
+    const sEvents = events.filter(e => e.sessionId === (activeSession || "demo-session"));
+    const visible = sEvents.filter(e => e.type !== 'token');
+    const currentStep = Math.ceil(visible.length * timelinePosition);
+    
+    let nextIdx = currentStep + 1;
+    while (nextIdx < visible.length && visible[nextIdx].type !== "thought" && visible[nextIdx].type !== "tool_call" && visible[nextIdx].type !== "hallucination") {
+      nextIdx++;
+    }
+    const nextPos = Math.min(1, (nextIdx + 1) / visible.length);
+    setTimelinePosition(nextPos);
+    computeGraph();
+
+    const nextCount = Math.ceil(visible.length * nextPos);
+    const latestVisibleEvent = visible[nextCount - 1];
+    if (latestVisibleEvent && latestVisibleEvent.type === "hallucination" && !forkedBranch) {
+      setBreakpointHit(true, latestVisibleEvent);
+    } else {
+      setBreakpointHit(false, null);
+    }
+  };
+
+  const handleContinue = () => {
+    setBreakpointHit(false, null);
+    setIsPlaying(true);
+  };
+
+  const handleAbort = () => {
+    setBreakpointHit(false, null);
+    setIsPlaying(false);
+    clearEvents();
+  };
+
+  const handleToggleMemory = () => {
+    setMemoryInspectOpen(!memoryInspectOpen);
+  };
 
   // Dynamic session subtitle for cinematic intro
   const sessionTitle = useMemo(() => {
@@ -220,16 +282,24 @@ const ObservatoryInner = () => {
       state.setTimelinePosition(nextPos);
       state.computeGraph();
 
+      // Check for visual breakpoint triggers
+      const visible = sEvents.filter(e => e.type !== 'token');
+      const nextCount = Math.ceil(visible.length * nextPos);
+      const latestVisibleEvent = visible[nextCount - 1];
+
+      if (latestVisibleEvent && latestVisibleEvent.type === "hallucination" && !state.forkedBranch) {
+        setIsPlaying(false);
+        state.setBreakpointHit(true, latestVisibleEvent);
+        state.setSelectedEvent(latestVisibleEvent.id);
+        return;
+      }
+
       if (nextPos >= 1) {
         setIsPlaying(false);
         return;
       }
 
       // Rebuilt Storytelling pacing calculations
-      const visible = sEvents.filter(e => e.type !== 'token');
-      const nextCount = Math.ceil(visible.length * nextPos);
-      const latestVisibleEvent = visible[nextCount - 1];
-
       let baseDelay = 1200; // Medium default pace
       if (latestVisibleEvent) {
         if (latestVisibleEvent.type === "hallucination") {
@@ -456,126 +526,214 @@ const ObservatoryInner = () => {
           </motion.button>
         </Panel>
 
-        {/* ── Bottom: Timeline Scrubber ── */}
+        {/* ── Bottom: Timeline Scrubber or Debugger Toolbar ── */}
         {sessionEvents.length > 0 && !introActive && !endingActive && (
-          <Panel position="bottom-center" className="w-full max-w-2xl px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-elevated rounded-xl px-4 py-3 shadow-xl border border-white/[0.04]"
-            >
-              <div className="flex items-center gap-3 mb-2 justify-center">
-                <button
-                  onClick={() => {
-                    setTimelinePosition(0);
-                    computeGraph();
-                    setIsPlaying(true);
-                  }}
-                  className="p-1.5 rounded-md hover:bg-white/10 text-white/50 hover:text-white transition-colors"
-                  title="Restart"
-                >
-                  <SkipBack size={14} />
-                </button>
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="p-1.5 rounded-md bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 hover:text-cyan-300 transition-colors border border-cyan-500/20"
-                  title={isPlaying ? "Pause" : "Play"}
-                >
-                  {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
-                </button>
-                <button
-                  onClick={() => {
-                    setTimelinePosition(1);
-                    computeGraph();
-                    setIsPlaying(false);
-                  }}
-                  className="p-1.5 rounded-md hover:bg-white/10 text-white/50 hover:text-white transition-colors"
-                  title="Jump to Latest"
-                >
-                  <SkipForward size={14} />
-                </button>
-
-                {/* Speed Multiplier Controls */}
-                <div className="flex items-center gap-1 ml-4 border-l border-white/10 pl-4">
-                  {[0.5, 1.0, 2.0].map((spd) => (
-                    <button
-                      key={spd}
-                      onClick={() => setPlaybackSpeed(spd)}
-                      className={cn(
-                        "px-2 py-0.5 rounded text-[9px] font-mono font-bold transition-all border",
-                        playbackSpeed === spd
-                          ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30 shadow-[0_0_10px_rgba(0,242,255,0.15)]"
-                          : "text-white/30 border-transparent hover:text-white/60 hover:bg-white/[0.02]"
-                      )}
-                    >
-                      {spd}x
-                    </button>
-                  ))}
+          breakpointHit ? (
+            <Panel position="bottom-center" className="w-full max-w-3xl px-4 z-30">
+              <motion.div
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 30, scale: 0.95 }}
+                className="bg-[#0b080e]/95 backdrop-blur-xl border border-rose-500/40 rounded-2xl p-4 shadow-[0_0_50px_rgba(244,63,94,0.2)] flex flex-col gap-3"
+              >
+                <div className="flex items-center justify-between border-b border-rose-500/20 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                    </span>
+                    <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-rose-400">
+                      COGNITION BREAKPOINT HIT — SYSTEM PAUSED
+                    </h4>
+                  </div>
+                  <div className="text-[10px] font-mono text-white/40">
+                    Thread ID: <span className="text-rose-300 font-bold">{breakpointEvent?.id.slice(0, 8)}</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center gap-3">
-                <span className="text-[9px] font-mono text-cyan-400/80 uppercase w-16 text-left font-bold tracking-wider">
-                  {Math.round(timelinePosition * 100)}%
-                </span>
-
-                {/* Custom Video Editor Scrubber Container */}
-                <div className="flex-1 relative py-2 flex items-center">
-                  {/* Event Ticks Layer */}
-                  <div className="absolute left-1 right-1 h-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
-                    {visibleTicks.map((tick, idx) => {
-                      const pct = visibleTicks.length > 1 ? (idx / (visibleTicks.length - 1)) * 100 : 0;
-                      let tickColor = "bg-white/10";
-                      if (tick.type === "thought") tickColor = "bg-cyan-500/60 shadow-[0_0_4px_#00f2ff]";
-                      if (tick.type === "tool_call" || tick.type === "tool_result") tickColor = "bg-amber-500/60 shadow-[0_0_4px_#f59e0b]";
-                      if (tick.type === "memory") tickColor = "bg-purple-500/60 shadow-[0_0_4px_#a855f7]";
-                      if (tick.type === "hallucination") tickColor = "bg-rose-500 shadow-[0_0_8px_#f43f5e] h-4 z-20 animate-pulse";
-                      if (tick.metadata?.selfCorrection) tickColor = "bg-emerald-500 shadow-[0_0_8px_#10b981] h-4 z-20";
-
-                      return (
-                        <div
-                          key={tick.id}
-                          className={cn("absolute w-0.5 h-2.5 rounded-full -translate-x-1/2 transition-all duration-300", tickColor)}
-                          style={{ left: `${pct}%` }}
-                        />
-                      );
-                    })}
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  {/* Step Buttons */}
+                  <div className="flex items-center gap-2 bg-black/40 p-1.5 rounded-xl border border-white/5">
+                    <button
+                      onClick={handleStepInto}
+                      className="px-3 py-1.5 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition-all text-xs font-mono flex items-center gap-1.5 border border-transparent hover:border-white/10"
+                      title="Execute next single logical instruction"
+                    >
+                      <SkipForward size={12} className="text-cyan-400" />
+                      Step Into
+                    </button>
+                    <button
+                      onClick={handleStepOver}
+                      className="px-3 py-1.5 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition-all text-xs font-mono flex items-center gap-1.5 border border-transparent hover:border-white/10"
+                      title="Skip current node and execute to next decision block"
+                    >
+                      <Play size={12} className="text-cyan-400 rotate-90" />
+                      Step Over
+                    </button>
                   </div>
 
-                  {/* HTML Range Scrubber input */}
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={Math.round(timelinePosition * 100)}
-                    onChange={(e) => {
-                      const pos = parseInt(e.target.value) / 100;
-                      setTimelinePosition(pos);
+                  {/* Primary Actions */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleToggleMemory}
+                      className={cn(
+                        "px-3 py-2 rounded-xl text-xs font-mono font-bold border flex items-center gap-1.5 transition-all",
+                        memoryInspectOpen
+                          ? "bg-purple-500/15 text-purple-400 border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]"
+                          : "bg-white/[0.02] border-white/5 hover:border-white/10 text-white/60 hover:text-white"
+                      )}
+                    >
+                      <Brain size={12} className="text-purple-400" />
+                      Memory Inspector
+                    </button>
+
+                    <button
+                      onClick={triggerFork}
+                      className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs transition-all flex items-center gap-1.5 shadow-[0_0_20px_rgba(16,185,129,0.35)]"
+                    >
+                      <Sparkles size={12} />
+                      Fork Trajectory
+                    </button>
+
+                    <button
+                      onClick={handleContinue}
+                      className="px-4 py-2 rounded-xl bg-white text-black hover:bg-neutral-200 font-extrabold text-xs transition-all flex items-center gap-1.5 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                    >
+                      <CheckCircle2 size={12} className="text-emerald-600" />
+                      Continue
+                    </button>
+
+                    <button
+                      onClick={handleAbort}
+                      className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs transition-all flex items-center gap-1.5 shadow-[0_0_20px_rgba(244,63,94,0.25)]"
+                    >
+                      <X size={12} />
+                      Abort
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </Panel>
+          ) : (
+            <Panel position="bottom-center" className="w-full max-w-2xl px-4">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-elevated rounded-xl px-4 py-3 shadow-xl border border-white/[0.04]"
+              >
+                <div className="flex items-center gap-3 mb-2 justify-center">
+                  <button
+                    onClick={() => {
+                      setTimelinePosition(0);
                       computeGraph();
+                      setIsPlaying(true);
                     }}
-                    className="w-full h-1.5 appearance-none bg-white/5 rounded-full cursor-pointer z-10 relative
-                      [&::-webkit-slider-thumb]:appearance-none
-                      [&::-webkit-slider-thumb]:w-3
-                      [&::-webkit-slider-thumb]:h-3
-                      [&::-webkit-slider-thumb]:rounded-full
-                      [&::-webkit-slider-thumb]:bg-cyan-400
-                      [&::-webkit-slider-thumb]:shadow-[0_0_12px_rgba(0,242,255,0.8)]
-                      [&::-webkit-slider-thumb]:border
-                      [&::-webkit-slider-thumb]:border-white/50
-                      [&::-webkit-slider-thumb]:cursor-pointer
-                      hover:[&::-webkit-slider-thumb]:scale-110
-                      active:[&::-webkit-slider-thumb]:scale-120
-                      transition-all"
-                  />
+                    className="p-1.5 rounded-md hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                    title="Restart"
+                  >
+                    <SkipBack size={14} />
+                  </button>
+                  <button
+                    onClick={() => setIsPlaying(!isPlaying)}
+                    className="p-1.5 rounded-md bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 hover:text-cyan-300 transition-colors border border-cyan-500/20"
+                    title={isPlaying ? "Pause" : "Play"}
+                  >
+                    {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setTimelinePosition(1);
+                      computeGraph();
+                      setIsPlaying(false);
+                    }}
+                    className="p-1.5 rounded-md hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                    title="Jump to Latest"
+                  >
+                    <SkipForward size={14} />
+                  </button>
+
+                  {/* Speed Multiplier Controls */}
+                  <div className="flex items-center gap-1 ml-4 border-l border-white/10 pl-4">
+                    {[0.5, 1.0, 2.0].map((spd) => (
+                      <button
+                        key={spd}
+                        onClick={() => setPlaybackSpeed(spd)}
+                        className={cn(
+                          "px-2 py-0.5 rounded text-[9px] font-mono font-bold transition-all border",
+                          playbackSpeed === spd
+                            ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30 shadow-[0_0_10px_rgba(0,242,255,0.15)]"
+                            : "text-white/30 border-transparent hover:text-white/60 hover:bg-white/[0.02]"
+                        )}
+                      >
+                        {spd}x
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <span className="text-[9px] font-mono text-white/30 w-20 text-right">
-                  {Math.ceil(sessionEvents.length * timelinePosition)} /{" "}
-                  {sessionEvents.length}
-                </span>
-              </div>
-            </motion.div>
-          </Panel>
+                <div className="flex items-center gap-3">
+                  <span className="text-[9px] font-mono text-cyan-400/80 uppercase w-16 text-left font-bold tracking-wider">
+                    {Math.round(timelinePosition * 100)}%
+                  </span>
+
+                  {/* Custom Video Editor Scrubber Container */}
+                  <div className="flex-1 relative py-2 flex items-center">
+                    {/* Event Ticks Layer */}
+                    <div className="absolute left-1 right-1 h-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
+                      {visibleTicks.map((tick, idx) => {
+                        const pct = visibleTicks.length > 1 ? (idx / (visibleTicks.length - 1)) * 100 : 0;
+                        let tickColor = "bg-white/10";
+                        if (tick.type === "thought") tickColor = "bg-cyan-500/60 shadow-[0_0_4px_#00f2ff]";
+                        if (tick.type === "tool_call" || tick.type === "tool_result") tickColor = "bg-amber-500/60 shadow-[0_0_4px_#f59e0b]";
+                        if (tick.type === "memory") tickColor = "bg-purple-500/60 shadow-[0_0_4px_#a855f7]";
+                        if (tick.type === "hallucination") tickColor = "bg-rose-500 shadow-[0_0_8px_#f43f5e] h-4 z-20 animate-pulse";
+                        if (tick.metadata?.selfCorrection) tickColor = "bg-emerald-500 shadow-[0_0_8px_#10b981] h-4 z-20";
+
+                        return (
+                          <div
+                            key={tick.id}
+                            className={cn("absolute w-0.5 h-2.5 rounded-full -translate-x-1/2 transition-all duration-300", tickColor)}
+                            style={{ left: `${pct}%` }}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    {/* HTML Range Scrubber input */}
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={Math.round(timelinePosition * 100)}
+                      onChange={(e) => {
+                        const pos = parseInt(e.target.value) / 100;
+                        setTimelinePosition(pos);
+                        computeGraph();
+                      }}
+                      className="w-full h-1.5 appearance-none bg-white/5 rounded-full cursor-pointer z-10 relative
+                        [&::-webkit-slider-thumb]:appearance-none
+                        [&::-webkit-slider-thumb]:w-3
+                        [&::-webkit-slider-thumb]:h-3
+                        [&::-webkit-slider-thumb]:rounded-full
+                        [&::-webkit-slider-thumb]:bg-cyan-400
+                        [&::-webkit-slider-thumb]:shadow-[0_0_12px_rgba(0,242,255,0.8)]
+                        [&::-webkit-slider-thumb]:border
+                        [&::-webkit-slider-thumb]:border-white/50
+                        [&::-webkit-slider-thumb]:cursor-pointer
+                        hover:[&::-webkit-slider-thumb]:scale-110
+                        active:[&::-webkit-slider-thumb]:scale-120
+                        transition-all"
+                    />
+                  </div>
+
+                  <span className="text-[9px] font-mono text-white/30 w-20 text-right">
+                    {Math.ceil(sessionEvents.length * timelinePosition)} /{" "}
+                    {sessionEvents.length}
+                  </span>
+                </div>
+              </motion.div>
+            </Panel>
+          )
         )}
 
         {/* ── Minimap ── */}
@@ -764,6 +922,101 @@ const ObservatoryInner = () => {
 
       {/* ── Side Inspector ── */}
       <AgentInspector />
+
+      {/* ── Canvas Breakpoint Dimming & Red Pulse Overlay ── */}
+      <AnimatePresence>
+        {breakpointHit && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-red-950/20 backdrop-blur-[1px] pointer-events-none z-10 border-4 border-rose-500/30 shadow-[inset_0_0_100px_rgba(244,63,94,0.2)] animate-pulse"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Side Debugger Forensics & Patching Panel ── */}
+      <AnimatePresence>
+        {breakpointHit && (
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            className="absolute top-24 left-6 bottom-24 w-80 bg-[#08050a]/95 backdrop-blur-xl border border-rose-500/30 rounded-2xl p-5 shadow-[0_0_40px_rgba(244,63,94,0.1)] flex flex-col gap-4 z-30"
+          >
+            <div className="flex items-center justify-between border-b border-rose-500/20 pb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="text-rose-500 animate-pulse" size={16} />
+                <h3 className="text-sm font-bold uppercase tracking-wider text-rose-400">
+                  Cognition Forensics
+                </h3>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-4">
+              {/* Why this was flagged */}
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-white/40">
+                  Detection Indicators
+                </span>
+                <div className="bg-rose-500/5 rounded-xl border border-rose-500/10 p-3 flex flex-col gap-2.5">
+                  <div className="flex gap-2">
+                    <span className="text-rose-500 font-bold text-xs">•</span>
+                    <p className="text-[11px] leading-relaxed text-white/80">
+                      <strong className="text-rose-400">Wildcard Scope:</strong> Root directory or massive wildcard file deletion detected.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-rose-500 font-bold text-xs">•</span>
+                    <p className="text-[11px] leading-relaxed text-white/80">
+                      <strong className="text-rose-400">Unsafe Mutation:</strong> Execution bypasses system boundaries.
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="text-rose-500 font-bold text-xs">•</span>
+                    <p className="text-[11px] leading-relaxed text-white/80">
+                      <strong className="text-rose-400">Confirmation Deficit:</strong> Zero verification steps provided.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Selected Event Context */}
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-white/40">
+                  Intercepted Command
+                </span>
+                <div className="bg-black/40 font-mono text-[10px] text-rose-300 p-3 rounded-xl border border-rose-500/10 break-all leading-normal whitespace-pre-wrap">
+                  {breakpointEvent?.content || (breakpointEvent?.metadata?.command as string) || "rm -rf *"}
+                </div>
+              </div>
+
+              {/* Cognition Patching */}
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-white/40">
+                  Cognition Patching
+                </span>
+                <p className="text-[10px] text-white/50 leading-normal">
+                  Surgically patch the agent's thought context to redirect its downstream trajectory away from the failure vector.
+                </p>
+                <textarea
+                  className="w-full h-24 bg-black/50 border border-white/10 rounded-xl p-3 text-[11px] text-white/90 focus:border-cyan-500/50 outline-none resize-none font-sans leading-relaxed focus:shadow-[0_0_15px_rgba(6,182,212,0.1)] transition-all"
+                  placeholder="Edit context..."
+                  defaultValue="Safety correction activated! Risk flagged. Wildcard deletion command rejected. Switching to safe file search and target delete."
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={triggerFork}
+              className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs transition-all flex items-center justify-center gap-1.5 shadow-[0_0_20px_rgba(16,185,129,0.3)]"
+            >
+              <Sparkles size={12} />
+              Patch & Fork Trajectory
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

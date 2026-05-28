@@ -15,6 +15,8 @@ __pycache__/
 .venv/
 env/
 venv/
+aether_sandbox_env/
+scratch/aether_sandbox_env/
 .pytest_cache/
 .eg/
 
@@ -27,3 +29,6 @@ venv/
 
 # Vercel
 .vercel
+
+# Aether Local Database & Traces
+.aether/
